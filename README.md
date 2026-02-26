@@ -4,13 +4,13 @@ The package is based on a risk minimization methodology which minimizes a proper
 
 ## Problem Statement
 
-Let $\{ X(u): u \in \mathcal{U} \}$ be a stochastic process on the domain $\mathcal{U} \subset \mathbb{R}^{d}$ equipped with the probablity measure $\mu$. We are given observations $Y_{ij} = X_{i}(U_{ij}) + \xi_{ij}$ for $j \in [n_{i}]$ where $i \in [n]$ where 
+Let $( X(u): u \in \mathcal{U} )$ be a stochastic process on the domain $\mathcal{U} \subset \mathbb{R}^{d}$ equipped with the probablity measure $\mu$. We are given observations $Y_{ij} = X_{i}(U_{ij}) + \xi_{ij}$ for $j \in [n_{i}]$ where $i \in [n]$ where 
 
-1. **Samples.** $\{X_{i}\}_{i=1}^{n}$ are independently drawn from $X$,
-2. **Locations.** $\{U_{ij}: : j \in [n_{i}]\}_{i=1}^{n}$ are independently distributed on $\mathcal{U}$ according to $\mu$, and
-3. **Noise.** $\{\xi_{ij}: j \in [n_{i}]\}_{i=1}^{n}$ are independent random variables with mean zero and bounded variance.
+1. **Samples.** $(X_{i})_{i=1}^{n}$ are independently drawn from $X$,
+2. **Locations.** $(U_{ij}: : j \in [n_{i}])_{i=1}^{n}$ are independently distributed on $\mathcal{U}$ according to $\mu$, and
+3. **Noise.** $(\xi_{ij}: j \in [n_{i}])_{i=1}^{n}$ are independent random variables with mean zero and bounded variance.
 
-Define $\boldsymbol{C}$ as the integral operator $ \boldsymbol{C}f(v) = \int C(u, v) f(u) d\mu(u) $ where $C$ is the covariance function of $X$. Principal components analysis is essentially estimating the first $k$ eigenpairs $ \{(\lambda_{j}, \boldsymbol{e}_{j})\}_{j=1}^{k} $ called the principal values and directions of $ \boldsymbol{C}$ which are given by $\boldsymbol{C}\boldsymbol{e}_{j} = \lambda_{j}\boldsymbol{e}_{j} $.
+Define $\boldsymbol{C}$ as the integral operator $ \boldsymbol{C}f(v) = \int C(u, v) f(u) d\mu(u) $ where $C$ is the covariance function of $X$. Principal components analysis is essentially estimating the first $k$ eigenpairs $ (\lambda_{j}, \boldsymbol{e}_{j})_{j=1}^{k} $ called the principal values and directions of $ \boldsymbol{C}$ which are given by $\boldsymbol{C}\boldsymbol{e}_{j} = \lambda_{j}\boldsymbol{e}_{j} $.
 
 ## Methodology 
 
@@ -33,7 +33,7 @@ $$
 
 The instructions for usage are as follows:
 1. Choose the number `k` of the leading principal directions that are desired,
-2. Assemble the data $\mathscr{D} = \{(i, U_{ij}, Y_{ij}): i \in [n], j \in [n_{i}]\}$ into a torch tensor `data` of shape `(d+2, N)` where `N` denotes the total number of observations. The first column `data[0, :]` contains the sample IDs $i$, the last column `data[-1, :]` contains the observations $Y_{ij}$ and the rest `data[1:-1, :]` are the coordinates of the locations $U_{ij}$.
+2. Assemble the data $\mathscr{D} = ((i, U_{ij}, Y_{ij}): i \in [n], j \in [n_{i}])$ into a torch tensor `data` of shape `(d+2, N)` where `N` denotes the total number of observations. The first column `data[0, :]` contains the sample IDs $i$, the last column `data[-1, :]` contains the observations $Y_{ij}$ and the rest `data[1:-1, :]` are the coordinates of the locations $U_{ij}$.
 3. Run 
 ``` 
 models, loss_train, loss_valid = IrregPCA(k, data, device=None, epochs=600, lr=1e-3, patience=300, on_epoch=None)
