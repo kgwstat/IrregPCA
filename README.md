@@ -15,16 +15,19 @@ Define the covariance $\mathbf{C}$ as the integral operator $\mathbf{C}f(v) = \i
 ## Methodology 
 
 The method is based on sequentially minimizing the empirical version of the functional
-$$
+
+$
     -\sum_{j=1}^{k} \langle f_{j}, \mathbf{C}f_{j}\rangle + \frac{1}{2}\sum_{i,j=1}^{k} |\langle f_{i}, f_{j} \rangle|^{2}
-$$
+$
+
 over $(f_{j})_{j=1}^{k}$ derived by replacing $\langle f, \mathbf{C}f \rangle$ with its unbiased estimator 
-$$ 
+
+$
 \hat{\mathbf{C}}[f, f] = \frac{1}{n} \sum_{i= 1}^{n} \left[ 
-        \sum_{\substack{p, q = 1\\ p \neq q}}^{n_i} \frac{f(U_{ip}) f(U_{iq}) Y_{ip} Y_{iq}}{n_i (n_i-1)}\right] \\
+        \sum_{\substack{p, q = 1\\ p \neq q}}^{n_i} \frac{f(U_{ip}) f(U_{iq}) Y_{ip} Y_{iq}}{n_i (n_i-1)}\right] 
         - \frac{1}{n(n-1)}\sum_{\substack{i, j = 1\\ i \neq j}}^{n} \left[\sum_{p=1}^{n_i} \frac{f(U_{ip}) Y_{ip}}{n_i} \right]
         \left[\sum_{q=1}^{n_j} \frac{f(U_{jq}) Y_{jq}}{n_j} \right] 
-$$ 
+$
 
 ## Usage 
 
@@ -35,9 +38,10 @@ The instructions for usage are as follows:
 ``` 
 models, loss_train, loss_valid = IrregPCA(k, data, device=None, epochs=600, lr=1e-3, patience=300, on_epoch=None)
 ```
-to get the principal functions $\mathbf{f}_{j} = \lambda_{j}\mathbf{e}_{j}$ as neural network models `models[j]` and the training and validation losses as `loss_train` and `loss_valid`.
+to get the principal functions $\mathbf{f}_{j} = \lambda_{j}\mathbf{e}_{j}$ as neural network models `models[j]` for `j = 1, ..., k`. Note that `models[0]` is actually the estimated mean $\mathbb{E}[X]$ of $X$. The tensors `loss_train` and `loss_valid` contain the training and validation losses for every epoch over the training period.
 
-Here is an illustration.
+Here is an illustration generated from 200 samples of 25 observations each.
+!['asdf'](./illustration.png)
 
 ## Installation
 
