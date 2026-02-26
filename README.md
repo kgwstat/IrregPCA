@@ -10,23 +10,23 @@ Let $\{X(u): u \in \mathcal{U}\}$ be a stochastic process on the domain $\mathca
 2. **Locations.** $\{U_{ij}: : j \in [n_{i}]\}_{i=1}^{n}$ are independently distributed on $\mathcal{U}$ according to $\mu$, and
 3. **Noise.** $\{\xi_{ij}: j \in [n_{i}]\}_{i=1}^{n}$ are independent random variables with mean zero and bounded variance.
 
-Define the covariance $\mathbf{C}$ as the integral operator $\mathbf{C}f(v) = \int C(u, v) f(u) \,d\mu(u)$. Principal components analysis is essentially estimating the first $k$ eigenpairs $\{(\lambda_{j}, \mathbf{e}_{j})\}_{j=1}^{k}$ called the principal values and directions of $\mathbf{C}$ which are given by $\mathbf{C}\mathbf{e}_{j} = \lambda_{j}\mathbf{e}_{j}$.
+Define the covariance $\mathbf{C}$ as the integral operator $ \mathbf{C}f(v) = \int C(u, v) f(u) \,d\mu(u) $. Principal components analysis is essentially estimating the first $k$ eigenpairs $ \{(\lambda_{j}, \mathbf{e}_{j})\}_{j=1}^{k} $ called the principal values and directions of $ \mathbf{C}$ which are given by $\mathbf{C}\mathbf{e}_{j} = \lambda_{j}\mathbf{e}_{j} $.
 
 ## Methodology 
 
 The method is based on sequentially minimizing the empirical version of the functional
 
 $
-    -\sum_{j=1}^{k} \langle f_{j}, \mathbf{C}f_{j}\rangle + \frac{1}{2}\sum_{i,j=1}^{k} |\langle f_{i}, f_{j} \rangle|^{2}
+     -\sum_{j=1}^{k} \langle f_{j}, \mathbf{C}f_{j}\rangle + \frac{1}{2}\sum_{i,j=1}^{k} |\langle f_{i}, f_{j} \rangle|^{2}
 $
 
-over $(f_{j})_{j=1}^{k}$ derived by replacing $\langle f, \mathbf{C}f \rangle$ with its unbiased estimator 
+over $ (f_{j})_{j=1}^{k} $ derived by replacing $ \langle f, \mathbf{C}f \rangle $ with its unbiased estimator 
 
 $
-\hat{\mathbf{C}}[f, f] = \frac{1}{n} \sum_{i= 1}^{n} \left[ 
+ \hat{\mathbf{C}}[f, f] = \frac{1}{n} \sum_{i= 1}^{n} \left[ 
         \sum_{\substack{p, q = 1\\ p \neq q}}^{n_i} \frac{f(U_{ip}) f(U_{iq}) Y_{ip} Y_{iq}}{n_i (n_i-1)}\right] 
         - \frac{1}{n(n-1)}\sum_{\substack{i, j = 1\\ i \neq j}}^{n} \left[\sum_{p=1}^{n_i} \frac{f(U_{ip}) Y_{ip}}{n_i} \right]
-        \left[\sum_{q=1}^{n_j} \frac{f(U_{jq}) Y_{jq}}{n_j} \right] 
+        \left[\sum_{q=1}^{n_j} \frac{f(U_{jq}) Y_{jq}}{n_j} \right]  
 $
 
 ## Usage 
