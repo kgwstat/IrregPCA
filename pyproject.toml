@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "irregpca"
+version = "0.1.0"
+description = "A package for irregular PCA analysis"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+    {name = "Kartik G. Waghmare", email = "kartik.waghmare.stats@gmail.com"}
+]
+dependencies = [
+    "torch"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["irregpca*"]
