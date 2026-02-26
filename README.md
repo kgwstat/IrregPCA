@@ -10,7 +10,7 @@ Let $( X(u): u \in \mathcal{U} )$ be a stochastic process on the domain $\mathca
 2. **Locations.** $(U_{ij}: : j \in [n_{i}])_{i=1}^{n}$ are independently distributed on $\mathcal{U}$ according to $\mu$, and
 3. **Noise.** $(\xi_{ij}: j \in [n_{i}])_{i=1}^{n}$ are independent random variables with mean zero and bounded variance.
 
-Define $\boldsymbol{C}$ as the integral operator $\boldsymbol{C} f(v) = \int C(u, v) f(u) d\mu(u)$ where $C$ is the covariance function of $X$. Principal components analysis is essentially estimating the first $k$ eigenpairs $(\lambda_{j}, \boldsymbol{e}_{j})_{j=1}^{k}$ called the principal values and directions of $\boldsymbol{C}$ which are given by $\boldsymbol{C}\boldsymbol{e}_{j} = \lambda_{j} \boldsymbol{e}_{j}$.
+Define $\boldsymbol{C}$ as the integral operator $\boldsymbol{C} f(v) = \int C(u, v) f(u) d\mu(u)$ where $C$ is the covariance function of $X$. Principal components analysis is essentially estimating the first $k$ eigenpairs $(\lambda_{j}, \boldsymbol{e} _{j})_{j=1}^{k}$ called the principal values and directions of $\boldsymbol{C}$ which are given by $\boldsymbol{C} \boldsymbol{e} _{j} = \lambda_{j} \boldsymbol{e} _{j}$.
 
 ## Methodology 
 
