@@ -5,13 +5,7 @@
 Install directly from GitHub:
 
 ```bash
-pip install "git+https://github.com/<your-username>/irregpca.git"
-```
-
-Install from a specific tag or branch:
-
-```bash
-pip install "git+https://github.com/<your-username>/irregpca.git@v0.1.0"
+pip install "git+https://github.com/kgwstat/IrregPCA.git"
 ```
 
 For local development (editable install):
