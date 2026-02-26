@@ -14,7 +14,7 @@ Define the covariance $\mathbf{C}$ as the integral operator $\mathbf{C}f(v) = \i
 
 ## Methodology 
 
-The method is based on minimizing the empirical version of the functional
+The method is based on sequentially minimizing the empirical version of the functional
 $$
     -\sum_{j=1}^{k} \langle f_{j}, \mathbf{C}f_{j}\rangle + \frac{1}{2}\sum_{i,j=1}^{k} |\langle f_{i}, f_{j} \rangle|^{2}
 $$
