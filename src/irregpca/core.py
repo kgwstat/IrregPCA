@@ -98,4 +98,4 @@ def IrregPCA(k, data, device=None,
 
     train_only(-1, models)
     
-    return joint_losses_train, joint_losses_valid, models
+    return models, joint_losses_train, joint_losses_valid

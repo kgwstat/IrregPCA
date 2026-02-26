@@ -1,4 +1,3 @@
-
 import torch
 
 def inner_product(model1, model2, device):

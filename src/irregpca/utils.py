@@ -1,6 +1,5 @@
 import torch
 
-
 def split_data(data, train_ratio=0.8):
     idx = data[:, 0].long()
     unique_idx = idx.unique()
