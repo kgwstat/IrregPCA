@@ -33,15 +33,36 @@ $$
 
 The instructions for usage are as follows:
 1. Choose the number `k` of the leading principal directions that are desired,
-2. Assemble the data $\mathscr{D} = ((i, U_{ij}, Y_{ij}): i \in [n], j \in [n_{i}])$ into a torch tensor `data` of shape `(d+2, N)` where `N` denotes the total number of observations. The first column `data[0, :]` contains the sample IDs $i$, the last column `data[-1, :]` contains the observations $Y_{ij}$ and the rest `data[1:-1, :]` are the coordinates of the locations $U_{ij}$.
+2. Assemble the data $\mathscr{D} = ((i, U_{ij}, Y_{ij}): i \in [n], j \in [n_{i}])$ into a torch tensor `data` of shape `(N, d+2)` where `N` denotes the total number of observations. Each **row** is one observation. `data[:, 0]` contains the sample IDs $i$, `data[:, -1]` contains the observations $Y_{ij}$, and `data[:, 1:-1]` are the coordinates of the locations $U_{ij}$.
+
+   For example, with `d = 1` (scalar locations) and `N = 4` observations across 2 samples:
+
+   ```python
+   import torch
+
+   data = torch.tensor([
+       [0, 0.10,  1.2],
+       [0, 0.35,  0.7],
+       [1, 0.20, -0.1],
+       [1, 0.80,  0.4],
+   ], dtype=torch.float32)
+   # N = 4, d = 1, data.shape == (4, 3)
+   ```
+
+   Here `data[:, 0]` are sample IDs `[0, 0, 1, 1]`, `data[:, 1]` are locations, and `data[:, -1]` are observations.
+
 3. Run 
 ``` 
 models, loss_train, loss_valid = IrregPCA(k, data, device=None, epochs=600, lr=1e-3, patience=300, on_epoch=None)
 ```
-to get the principal functions $\boldsymbol{f}_{j} = \lambda_{j}\boldsymbol{e}_{j}$ as neural network models `models[j]` for `j = 1, ..., k`. Note that `models[0]` is actually the estimated mean $\mathbb{E}[X]$ of $X$. The tensors `loss_train` and `loss_valid` contain the training and validation losses for every epoch over the training period.
+to get the principal functions $\boldsymbol{f}_{j} = v_{j}\boldsymbol{e}_{j}$ as neural network models `models[j]` for `j = 1, ..., k`. Note that `models[0]` is actually the estimated mean $\mathbb{E}[X]$ of $X$. The tensors `loss_train` and `loss_valid` contain the training and validation losses for every epoch over the training period.
 
 Here is an illustration generated from 200 samples of 25 observations each.
-!['illustration'](./illustration.png)
+
+<div align="center">
+     <img src="./illustration.png" width="250" alt="illustration">
+</div>
+
 
 ## Installation
 

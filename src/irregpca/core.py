@@ -8,6 +8,59 @@ from .utils import split_data
 
 def IrregPCA(k, data, device=None,
                  epochs=600, lr=1e-3, patience=300, on_epoch=None):
+    """
+    Fit IrregPCA to irregularly observed functional data.
+
+    Parameters
+    ----------
+    k : int
+        Number of leading principal directions to estimate.
+    data : torch.Tensor
+        Tensor of shape (N, d+2), where each row is one observation:
+        [sample_id, location_1, ..., location_d, observation].
+        - ``data[:, 0]``   — integer sample IDs
+        - ``data[:, 1:-1]``— d-dimensional observation locations
+        - ``data[:, -1]``  — scalar observation values
+    device : str or torch.device, optional
+        Device to run on. Defaults to CUDA/MPS if available, else CPU.
+    epochs : int, optional
+        Maximum number of training epochs per component (default 600).
+    lr : float, optional
+        Adam learning rate (default 1e-3).
+    patience : int, optional
+        Early-stopping patience in epochs (default 300).
+    on_epoch : callable, optional
+        Optional callback invoked at the end of each epoch with signature
+        ``on_epoch(j, epoch, joint_losses_train, joint_losses_valid)``.
+
+    Returns
+    -------
+    models : list of torch.nn.Module
+        ``models[0]`` is the estimated mean; ``models[j]`` for ``j >= 1``
+        is the j-th scaled principal direction f_j = v_j * e_j.
+    joint_losses_train : list of float
+        Joint training loss recorded at each epoch across all components.
+    joint_losses_valid : list of float
+        Joint validation loss recorded at each epoch across all components.
+    """
+    if data.ndim != 2:
+        raise ValueError(
+            f"Expected `data` to be a 2-D tensor, but got {data.ndim}-D. "
+            "Expected shape is (N, d+2), with rows as observations and "
+            "columns [idx, loc..., obs]."
+        )
+    if data.shape[1] < 3:
+        raise ValueError(
+            f"Expected `data` to have at least 3 columns (got {data.shape[1]}). "
+            "Expected shape is (N, d+2), with columns [idx, loc..., obs]."
+        )
+    if data.shape[0] < data.shape[1]:
+        raise ValueError(
+            f"Expected `data` to have shape (N, d+2), but got shape "
+            f"{tuple(data.shape)} where the number of rows ({data.shape[0]}) "
+            f"is less than the number of columns ({data.shape[1]}). "
+            "You may have passed transposed data of shape (d+2, N)."
+        )
 
     if device is None:
         if torch.cuda.is_available():
@@ -22,8 +75,6 @@ def IrregPCA(k, data, device=None,
     data = data.to(device)
 
     d = data.shape[1] - 2
-    if d < 1:
-        raise ValueError("Expected data with at least 3 columns: [idx, loc..., obs].")
 
     data_train, data_valid = split_data(data, 0.8)
     models = [DefaultModel(d=d).to(device=device) for _ in range(k+1)]
