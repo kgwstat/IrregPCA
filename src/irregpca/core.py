@@ -1,67 +1,117 @@
+from __future__ import annotations
+
+from typing import Callable
+
 import torch
 from torch import optim
 
 from .model import DefaultModel, train_only
 from .estimate import mean_fn, covariance_fn, inner_product
 from .utils import split_data
+from .result import IrregPCAResult, LossHistory
 
 
-def IrregPCA(k, data, device=None,
-                 epochs=600, lr=1e-3, patience=300, on_epoch=None):
-    """
-    Fit IrregPCA to irregularly observed functional data.
+def _parse_input(
+    data: torch.Tensor | None = None,
+    *,
+    sample_ids: torch.Tensor | None = None,
+    locations: torch.Tensor | None = None,
+    values: torch.Tensor | None = None,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Normalize packed or split input into ``(sample_ids, locations, values)``.
 
     Parameters
     ----------
-    k : int
-        Number of leading principal directions to estimate.
-    data : torch.Tensor
-        Tensor of shape (N, d+2), where each row is one observation:
-        [sample_id, location_1, ..., location_d, observation].
-        - ``data[:, 0]``   — integer sample IDs
-        - ``data[:, 1:-1]``— d-dimensional observation locations
-        - ``data[:, -1]``  — scalar observation values
-    device : str or torch.device, optional
-        Device to run on. Defaults to CUDA/MPS if available, else CPU.
-    epochs : int, optional
-        Maximum number of training epochs per component (default 600).
-    lr : float, optional
-        Adam learning rate (default 1e-3).
-    patience : int, optional
-        Early-stopping patience in epochs (default 300).
-    on_epoch : callable, optional
-        Optional callback invoked at the end of each epoch with signature
-        ``on_epoch(j, epoch, joint_losses_train, joint_losses_valid)``.
+    data : torch.Tensor, optional
+        Packed tensor of shape ``(N, d+2)``. Columns are
+        ``[sample_id, loc_1, ..., loc_d, value]``.
+    sample_ids : torch.Tensor, optional
+        1-D tensor of shape ``(N,)`` with integer sample identifiers.
+    locations : torch.Tensor, optional
+        2-D tensor of shape ``(N, d)`` with observation locations.
+    values : torch.Tensor, optional
+        1-D tensor of shape ``(N,)`` with observed scalar values.
 
     Returns
     -------
-    models : list of torch.nn.Module
-        ``models[0]`` is the estimated mean; ``models[j]`` for ``j >= 1``
-        is the j-th scaled principal direction f_j = v_j * e_j.
-    joint_losses_train : list of float
-        Joint training loss recorded at each epoch across all components.
-    joint_losses_valid : list of float
-        Joint validation loss recorded at each epoch across all components.
-    """
-    if data.ndim != 2:
-        raise ValueError(
-            f"Expected `data` to be a 2-D tensor, but got {data.ndim}-D. "
-            "Expected shape is (N, d+2), with rows as observations and "
-            "columns [idx, loc..., obs]."
-        )
-    if data.shape[1] < 3:
-        raise ValueError(
-            f"Expected `data` to have at least 3 columns (got {data.shape[1]}). "
-            "Expected shape is (N, d+2), with columns [idx, loc..., obs]."
-        )
-    if data.shape[0] < data.shape[1]:
-        raise ValueError(
-            f"Expected `data` to have shape (N, d+2), but got shape "
-            f"{tuple(data.shape)} where the number of rows ({data.shape[0]}) "
-            f"is less than the number of columns ({data.shape[1]}). "
-            "You may have passed transposed data of shape (d+2, N)."
-        )
+    tuple of torch.Tensor
+        Normalized ``(sample_ids, locations, values)`` tensors.
 
+    Raises
+    ------
+    ValueError
+        On invalid shape or missing arguments.
+    """
+    if data is not None:
+        if data.ndim != 2:
+            raise ValueError(
+                f"Expected `data` to be a 2-D tensor, but got {data.ndim}-D. "
+                "Expected shape is (N, d+2), with columns [sample_id, loc..., value]."
+            )
+        if data.shape[1] < 3:
+            raise ValueError(
+                f"Expected `data` to have at least 3 columns (got {data.shape[1]}). "
+                "Expected shape is (N, d+2), with columns [sample_id, loc..., value]."
+            )
+        sample_ids = data[:, 0]
+        locations = data[:, 1:-1]
+        values = data[:, -1]
+    else:
+        if sample_ids is None or locations is None or values is None:
+            raise ValueError(
+                "Provide either `data` (packed mode) or all three of "
+                "`sample_ids`, `locations`, and `values` (split mode)."
+            )
+        if sample_ids.ndim != 1:
+            raise ValueError(
+                f"Expected `sample_ids` to be 1-D, got shape {tuple(sample_ids.shape)}."
+            )
+        if locations.ndim != 2:
+            raise ValueError(
+                f"Expected `locations` to be 2-D with shape (N, d), "
+                f"got shape {tuple(locations.shape)}."
+            )
+        if values.ndim != 1:
+            raise ValueError(
+                f"Expected `values` to be 1-D, got shape {tuple(values.shape)}."
+            )
+        n = sample_ids.shape[0]
+        if not (locations.shape[0] == n and values.shape[0] == n):
+            raise ValueError(
+                f"Length mismatch: `sample_ids` has {n} rows, "
+                f"`locations` has {locations.shape[0]}, "
+                f"`values` has {values.shape[0]}. All must match."
+            )
+
+    return sample_ids, locations, values
+
+
+def _fit_irreg_pca_core(
+    *,
+    sample_ids: torch.Tensor,
+    locations: torch.Tensor,
+    values: torch.Tensor,
+    n_components: int,
+    epochs: int,
+    lr: float,
+    patience: int,
+    valid_split: float,
+    random_state: int | None,
+    device: str | torch.device | None,
+    model_factory: Callable[[int], torch.nn.Module] | None,
+    verbose: bool,
+    callbacks: list[Callable[[dict], None]] | None,
+) -> IrregPCAResult:
+    """Core fitting routine for IrregPCA.
+
+    Trains one mean model and ``n_components`` component models sequentially,
+    preserving the mathematical method from the original implementation.
+
+    Returns
+    -------
+    IrregPCAResult
+    """
+    # --- device resolution ---
     if device is None:
         if torch.cuda.is_available():
             device = torch.device("cuda")
@@ -72,81 +122,153 @@ def IrregPCA(k, data, device=None,
     elif isinstance(device, str):
         device = torch.device(device)
 
-    data = data.to(device)
+    device_str = str(device)
 
-    d = data.shape[1] - 2
+    # --- pack split inputs into (N, d+2) for internal helpers ---
+    data = torch.cat(
+        [
+            sample_ids.float().unsqueeze(-1),
+            locations.float(),
+            values.float().unsqueeze(-1),
+        ],
+        dim=1,
+    ).to(device)
 
-    data_train, data_valid = split_data(data, 0.8)
-    models = [DefaultModel(d=d).to(device=device) for _ in range(k+1)]
-    
-    losses_train, losses_valid = [], []
-    joint_losses_train, joint_losses_valid = [], []
-    
-    # construct loss functions
-    lossfn = [None for _ in range(k+1)]
+    d = locations.shape[1]
+    k = n_components
+
+    # --- train / validation split ---
+    train_ratio = 1.0 - valid_split
+    data_train, data_valid = split_data(data, train_ratio, random_state=random_state)
+
+    # --- model creation ---
+    if model_factory is None:
+        models = [DefaultModel(d=d).to(device=device) for _ in range(k + 1)]
+    else:
+        models = [model_factory(d).to(device=device) for _ in range(k + 1)]
+
+    # --- loss functions ---
+    lossfn = [None] * (k + 1)
     lossfn[0] = lambda models, data: (
-        -mean_fn(models[0], data) 
+        -mean_fn(models[0], data)
         + 0.5 * inner_product(models[0], models[0], device=device)
-    )    
-    for j in range(1, k+1):
-        lossfn[j] = (lambda j: 
-            lambda models, data: (
-                -covariance_fn(models[j], data) 
-                + 0.5 * inner_product(models[j], models[j], device=device).pow(2) 
-                + (torch.stack([inner_product(models[i], models[j], device=device).pow(2) for i in range(1, j)]).sum() if j > 1 else torch.tensor(0.0, device=device))
+    )
+    for j in range(1, k + 1):
+        lossfn[j] = (
+            lambda j: lambda models, data: (
+                -covariance_fn(models[j], data)
+                + 0.5 * inner_product(models[j], models[j], device=device).pow(2)
+                + (
+                    torch.stack(
+                        [
+                            inner_product(models[i], models[j], device=device).pow(2)
+                            for i in range(1, j)
+                        ]
+                    ).sum()
+                    if j > 1
+                    else torch.tensor(0.0, device=device)
+                )
             )
-            )(j)
+        )(j)
 
-    loss_joint = lambda models, data: lossfn[0](models, data) + torch.stack([lossfn[j](models, data) for j in range(1, k+1)]).sum()
-    
-    # train models sequentially
+    def loss_joint(models, data):
+        return lossfn[0](models, data) + torch.stack(
+            [lossfn[j](models, data) for j in range(1, k + 1)]
+        ).sum()
+
+    # --- history accumulators ---
+    history = LossHistory(
+        joint_train=[],
+        joint_valid=[],
+        component_train=[[] for _ in range(k + 1)],
+        component_valid=[[] for _ in range(k + 1)],
+    )
+
+    # --- sequential training ---
     for j, model in enumerate(models):
-        print(f"\n===> Training model {j}")
-        
+        is_mean = j == 0
+        component_index = None if is_mean else (j - 1)
+
+        if verbose:
+            label = "mean" if is_mean else f"component {component_index}"
+            print(f"\n===> Training {label}")
+
         train_only(j, models)
-        optimizer = optim.Adam(model.parameters(), lr=lr, )
+        optimizer = optim.Adam(model.parameters(), lr=lr)
 
         wait = 0
         min_valid_loss = float("inf")
-        best_state = {name: v.detach().clone() for name, v in model.state_dict().items()}
+        best_state = {
+            name: v.detach().clone() for name, v in model.state_dict().items()
+        }
 
         for epoch in range(epochs):
-            
-            # train
+            # train step
             model.train()
             optimizer.zero_grad()
             loss_train = lossfn[j](models, data_train)
             loss_train.backward()
             optimizer.step()
 
-            # evaluate
+            # validation step
             model.eval()
             with torch.no_grad():
                 loss_valid = lossfn[j](models, data_valid)
 
-            # log
-            joint_losses_train.append(loss_joint(models, data_train).item())
-            joint_losses_valid.append(loss_joint(models, data_valid).item())
-            losses_train.append(loss_train.item())
-            losses_valid.append(loss_valid.item())
+            train_loss_val = loss_train.item()
+            valid_loss_val = loss_valid.item()
+
+            # joint losses (preserved from original: outside no_grad)
+            joint_train_val = loss_joint(models, data_train).item()
+            joint_valid_val = loss_joint(models, data_valid).item()
+
+            # record history
+            history.component_train[j].append(train_loss_val)
+            history.component_valid[j].append(valid_loss_val)
+            history.joint_train.append(joint_train_val)
+            history.joint_valid.append(joint_valid_val)
 
             # early stopping
             if loss_valid < min_valid_loss:
                 min_valid_loss = loss_valid
-                best_state = {name: v.detach().clone() for name, v in model.state_dict().items()}
+                best_state = {
+                    name: v.detach().clone()
+                    for name, v in model.state_dict().items()
+                }
                 wait = 0
             else:
                 wait += 1
 
             if wait > patience:
-                print("Early stop.")
+                if verbose:
+                    print("Early stop.")
                 model.load_state_dict(best_state)
                 break
-            
-            # epoch end callback
-            if on_epoch is not None:
-                on_epoch(j, epoch, joint_losses_train, joint_losses_valid)
 
+            # epoch callbacks
+            if callbacks:
+                info = {
+                    "stage": "training",
+                    "component_index": component_index,
+                    "epoch": epoch,
+                    "train_loss": train_loss_val,
+                    "valid_loss": valid_loss_val,
+                    "joint_train_loss": joint_train_val,
+                    "joint_valid_loss": joint_valid_val,
+                    "is_mean": is_mean,
+                    "device": device_str,
+                }
+                for cb in callbacks:
+                    cb(info)
+
+    # restore all models to eval mode with no gradients
     train_only(-1, models)
-    
-    return models, joint_losses_train, joint_losses_valid
+
+    return IrregPCAResult(
+        mean_model=models[0],
+        component_models=models[1:],
+        history=history,
+        n_components=n_components,
+        input_dim=d,
+        device=device_str,
+    )
