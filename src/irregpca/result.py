@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 import torch
 
@@ -12,23 +15,21 @@ class LossHistory:
     Attributes
     ----------
     joint_train : list of float
-        Joint training loss across all component models, recorded once per
-        epoch per component during sequential training.
     joint_valid : list of float
-        Joint validation loss, recorded at the same frequency as
-        ``joint_train``.
     component_train : list of list of float
-        Per-component training losses. ``component_train[0]`` holds the mean
-        model's per-epoch losses; ``component_train[j]`` for ``j >= 1`` holds
-        losses for the (j-1)-th component model.
     component_valid : list of list of float
-        Per-component validation losses, mirroring ``component_train``.
+    best_epochs : list of int
+        Best epoch index per fitted model (mean model first, then components).
+    best_valid_losses : list of float
+        Best validation loss per fitted model.
     """
 
     joint_train: list[float] = field(default_factory=list)
     joint_valid: list[float] = field(default_factory=list)
     component_train: list[list[float]] = field(default_factory=list)
     component_valid: list[list[float]] = field(default_factory=list)
+    best_epochs: list[int] = field(default_factory=list)
+    best_valid_losses: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -38,18 +39,11 @@ class IrregPCAResult:
     Attributes
     ----------
     mean_model : torch.nn.Module
-        Fitted neural network representing the mean function.
     component_models : list of torch.nn.Module
-        Fitted neural networks for each principal component function, in order.
-        ``component_models[0]`` corresponds to the first component (0-based).
     history : LossHistory
-        Loss history recorded during training.
     n_components : int
-        Number of fitted component models.
     input_dim : int
-        Dimensionality *d* of the location space.
     device : str
-        Device on which the models were trained (e.g. ``"cpu"``, ``"cuda"``).
     """
 
     mean_model: torch.nn.Module
@@ -59,19 +53,22 @@ class IrregPCAResult:
     input_dim: int
     device: str
 
+    # ------------------------------------------------------------------ #
+    # Core evaluation methods (preserved from original API)                #
+    # ------------------------------------------------------------------ #
+
     def mean(self, locations: torch.Tensor) -> torch.Tensor:
-        """Evaluate the fitted mean function at the given locations.
+        """Evaluate the fitted mean function.
 
         Parameters
         ----------
         locations : torch.Tensor
-            Tensor of shape ``(N, d)`` giving the query locations. The tensor
-            is automatically moved to the model's device before evaluation.
+            Shape ``(N, d)``.
 
         Returns
         -------
         torch.Tensor
-            1-D tensor of shape ``(N,)`` with the mean function values.
+            Shape ``(N,)``.
         """
         locs = locations.to(torch.device(self.device))
         self.mean_model.eval()
@@ -79,25 +76,23 @@ class IrregPCAResult:
             return self.mean_model(locs).squeeze(-1)
 
     def component(self, index: int, locations: torch.Tensor) -> torch.Tensor:
-        """Evaluate a single principal component function at the given locations.
+        """Evaluate a single principal component function (0-based).
 
         Parameters
         ----------
         index : int
-            0-based index of the component to evaluate.
         locations : torch.Tensor
-            Tensor of shape ``(N, d)`` giving the query locations. The tensor
-            is automatically moved to the model's device before evaluation.
+            Shape ``(N, d)``.
 
         Returns
         -------
         torch.Tensor
-            1-D tensor of shape ``(N,)`` with the component function values.
+            Shape ``(N,)``.
 
         Raises
         ------
         ValueError
-            If ``index`` is out of the range ``[0, n_components - 1]``.
+            If ``index`` is out of range.
         """
         if index < 0 or index >= self.n_components:
             raise ValueError(
@@ -111,18 +106,17 @@ class IrregPCAResult:
             return model(locs).squeeze(-1)
 
     def components(self, locations: torch.Tensor) -> torch.Tensor:
-        """Evaluate all component functions at the given locations.
+        """Evaluate all component functions stacked along the last dimension.
 
         Parameters
         ----------
         locations : torch.Tensor
-            Tensor of shape ``(N, d)`` giving the query locations.
+            Shape ``(N, d)``.
 
         Returns
         -------
         torch.Tensor
-            Tensor of shape ``(N, n_components)`` where column ``j`` contains
-            the values of the ``j``-th component function (0-based).
+            Shape ``(N, n_components)``.
         """
         locs = locations.to(torch.device(self.device))
         parts = []
@@ -133,20 +127,7 @@ class IrregPCAResult:
         return torch.stack(parts, dim=-1)
 
     def all_functions(self, locations: torch.Tensor) -> torch.Tensor:
-        """Evaluate the mean and all component functions at the given locations.
-
-        Parameters
-        ----------
-        locations : torch.Tensor
-            Tensor of shape ``(N, d)`` giving the query locations.
-
-        Returns
-        -------
-        torch.Tensor
-            Tensor of shape ``(N, 1 + n_components)`` where column 0 is the
-            mean function and columns ``1..n_components`` are the component
-            functions in order.
-        """
+        """Evaluate mean and all components, shape ``(N, 1 + n_components)``."""
         locs = locations.to(torch.device(self.device))
         self.mean_model.eval()
         with torch.no_grad():
@@ -157,3 +138,138 @@ class IrregPCAResult:
             with torch.no_grad():
                 comp_vals.append(model(locs).squeeze(-1))
         return torch.stack([mean_vals] + comp_vals, dim=-1)
+
+    # ------------------------------------------------------------------ #
+    # New PCA-style summaries                                               #
+    # ------------------------------------------------------------------ #
+
+    def component_norms(
+        self,
+        num_points: int = 4096,
+    ) -> torch.Tensor:
+        """Approximate L2 norm of each component function on [0,1]^d.
+
+        Uses a uniform grid on [0,1] (1-D only).
+
+        Parameters
+        ----------
+        num_points : int
+
+        Returns
+        -------
+        torch.Tensor
+            Shape ``(n_components,)``.
+        """
+        dev = torch.device(self.device)
+        grid = torch.linspace(0.0, 1.0, num_points, device=dev).unsqueeze(-1)
+        norms = []
+        for model in self.component_models:
+            model.eval()
+            with torch.no_grad():
+                vals = model(grid).squeeze(-1)
+            norms.append((vals.pow(2).mean()).sqrt())
+        return torch.stack(norms)
+
+    def principal_values(self, num_points: int = 4096) -> torch.Tensor:
+        """Return approximate squared norms (proxy for principal values).
+
+        Parameters
+        ----------
+        num_points : int
+
+        Returns
+        -------
+        torch.Tensor
+            Shape ``(n_components,)``.
+        """
+        return self.component_norms(num_points=num_points).pow(2)
+
+    def explained_variance_proxy(self, num_points: int = 4096) -> torch.Tensor:
+        """Return per-component explained variance as a fraction of total.
+
+        Parameters
+        ----------
+        num_points : int
+
+        Returns
+        -------
+        torch.Tensor
+            Shape ``(n_components,)``, sums to 1.
+        """
+        pv = self.principal_values(num_points=num_points)
+        total = pv.sum()
+        if total == 0:
+            return torch.zeros_like(pv)
+        return pv / total
+
+    def orthogonality_matrix(self, num_points: int = 4096) -> torch.Tensor:
+        """Compute the Gram matrix of inner products between component functions.
+
+        Entry ``(i, j)`` is ⟨e_i, e_j⟩ approximated on a uniform [0,1] grid.
+
+        Parameters
+        ----------
+        num_points : int
+
+        Returns
+        -------
+        torch.Tensor
+            Shape ``(n_components, n_components)``.
+        """
+        dev = torch.device(self.device)
+        grid = torch.linspace(0.0, 1.0, num_points, device=dev).unsqueeze(-1)
+        evals = []
+        for model in self.component_models:
+            model.eval()
+            with torch.no_grad():
+                evals.append(model(grid).squeeze(-1))  # (num_points,)
+        gram = torch.zeros(self.n_components, self.n_components, device=dev)
+        for i in range(self.n_components):
+            for j in range(self.n_components):
+                gram[i, j] = (evals[i] * evals[j]).mean()
+        return gram
+
+    # ------------------------------------------------------------------ #
+    # Serialisation helpers                                                 #
+    # ------------------------------------------------------------------ #
+
+    def save(self, path: str | Path) -> None:
+        """Save the result to a file using ``torch.save``.
+
+        Parameters
+        ----------
+        path : str or Path
+        """
+        torch.save(self, str(path))
+
+    @staticmethod
+    def load(path: str | Path) -> "IrregPCAResult":
+        """Load a previously saved result.
+
+        Parameters
+        ----------
+        path : str or Path
+
+        Returns
+        -------
+        IrregPCAResult
+        """
+        return torch.load(str(path), weights_only=False)
+
+    def to(self, device: str | torch.device) -> "IrregPCAResult":
+        """Move all models to ``device`` and return self.
+
+        Parameters
+        ----------
+        device : str or torch.device
+
+        Returns
+        -------
+        IrregPCAResult
+            Same object (modified in-place).
+        """
+        dev = torch.device(device) if isinstance(device, str) else device
+        self.mean_model = self.mean_model.to(dev)
+        self.component_models = [m.to(dev) for m in self.component_models]
+        self.device = str(dev)
+        return self
