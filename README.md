@@ -29,42 +29,9 @@ $$
         \left[\sum_{q=1}^{n_j} \frac{f(U_{jq}) Y_{jq}}{n_j} \right]  
 $$
 
-## Usage 
+## Usage
 
-The instructions for usage are as follows:
-1. Choose the number `k` of the leading principal directions that are desired,
-2. Assemble the data $\mathscr{D} = ((i, U_{ij}, Y_{ij}): i \in [n], j \in [n_{i}])$ into a torch tensor `data` of shape `(N, d+2)` where `N` denotes the total number of observations. Each **row** is one observation. `data[:, 0]` contains the sample IDs $i$, `data[:, -1]` contains the observations $Y_{ij}$, and `data[:, 1:-1]` are the coordinates of the locations $U_{ij}$.
-
-   For example, with `d = 1` (scalar locations) and `N = 4` observations across 2 samples:
-
-   ```python
-   import torch
-
-   data = torch.tensor([
-       [0, 0.10,  1.2],
-       [0, 0.35,  0.7],
-       [1, 0.20, -0.1],
-       [1, 0.80,  0.4],
-   ], dtype=torch.float32)
-   # N = 4, d = 1, data.shape == (4, 3)
-   ```
-
-   Here `data[:, 0]` are sample IDs `[0, 0, 1, 1]`, `data[:, 1]` are locations, and `data[:, -1]` are observations.
-
-3. Run 
-``` 
-models, loss_train, loss_valid = IrregPCA(k, data, device=None, epochs=600, lr=1e-3, patience=300, on_epoch=None)
-```
-to get the principal functions $\boldsymbol{f}_{j} = v_{j}\boldsymbol{e}_{j}$ as neural network models `models[j]` for `j = 1, ..., k`. Note that `models[0]` is actually the estimated mean $\mathbb{E}[X]$ of $X$. The tensors `loss_train` and `loss_valid` contain the training and validation losses for every epoch over the training period.
-
-Here is an illustration generated from 200 samples of 25 observations each.
-
-<div align="center">
-     <img src="./illustration.png" width="250" alt="illustration">
-</div>
-
-
-## Installation
+### Installation
 
 Install directly from GitHub:
 
@@ -77,3 +44,100 @@ For local development (editable install):
 ```bash
 pip install -e .
 ```
+
+### Imports
+
+```python
+from irregpca import IrregPCA, IrregPCAResult, fit_irreg_pca
+```
+
+### Preparing input data
+
+Assemble the data $\mathscr{D} = ((i, U_{ij}, Y_{ij}): i \in [n], j \in [n_{i}])$ into a torch tensor of shape `(N, d+2)` where `N` is the total number of observations. Each **row** is one observation:
+- `data[:, 0]` — integer sample IDs $i$
+- `data[:, 1:-1]` — $d$-dimensional location coordinates $U_{ij}$
+- `data[:, -1]` — scalar observations $Y_{ij}$
+
+For example, with `d = 1` (scalar locations) and `N = 4` observations across 2 samples:
+
+```python
+import torch
+
+data = torch.tensor([
+    [0, 0.10,  1.2],
+    [0, 0.35,  0.7],
+    [1, 0.20, -0.1],
+    [1, 0.80,  0.4],
+], dtype=torch.float32)
+# N = 4, d = 1, data.shape == (4, 3)
+# data[:, 0]  -> sample IDs [0, 0, 1, 1]
+# data[:, 1]  -> locations
+# data[:, -1] -> observations
+```
+
+Alternatively, split the inputs into three separate tensors:
+
+```python
+sample_ids = torch.tensor([0, 0, 1, 1], dtype=torch.float32)  # shape (N,)
+locations  = torch.tensor([[0.10], [0.35], [0.20], [0.80]])    # shape (N, d)
+values     = torch.tensor([1.2, 0.7, -0.1, 0.4])              # shape (N,)
+```
+
+### Fitting
+
+**Using the estimator class (preferred):**
+
+```python
+est = IrregPCA(n_components=3, epochs=600, lr=1e-3, patience=300)
+
+# packed input
+result = est.fit(data=data)
+
+# or split input
+result = est.fit(sample_ids=sample_ids, locations=locations, values=values)
+```
+
+**Using the functional wrapper:**
+
+```python
+result = fit_irreg_pca(data=data, n_components=3)
+```
+
+### Accessing the fitted functions
+
+The result object exposes the fitted mean function and principal component functions as neural network models:
+
+```python
+grid = torch.linspace(0, 1, 200).unsqueeze(-1)  # shape (200, 1)
+
+# mean function E[X]
+mu = result.mean(grid)           # shape (200,)
+
+# first principal component function (0-based index)
+phi1 = result.component(0, grid) # shape (200,)
+
+# all component functions stacked
+Phi = result.components(grid)    # shape (200, n_components)
+```
+
+The estimator also exposes the same methods directly after fitting:
+
+```python
+mu   = est.mean(grid)
+phi1 = est.component(0, grid)
+Phi  = est.components(grid)
+```
+
+The underlying fitted models are accessible via:
+
+```python
+result.mean_model        # torch.nn.Module for the mean
+result.component_models  # list of torch.nn.Module, one per component
+result.history           # LossHistory with joint and per-component losses
+```
+
+Here is an illustration generated from 200 samples of 25 observations each.
+
+<div align="center">
+     <img src="./illustration.png" width="250" alt="illustration">
+</div>
