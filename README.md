@@ -71,6 +71,8 @@ cfg = IrregPCAConfig(
     patience=300,
     valid_split=0.2,
     random_state=0,
+    training_mode="mini_batch",   # "full_batch" | "mini_batch" | "streaming"
+    batch_size=32,
     verbose=True,
 )
 est = IrregPCA(config=cfg)
@@ -86,7 +88,12 @@ result = est.fit(sample_ids=..., locations=..., values=...)
 | `"streaming"` | For memory-mapped / disk-backed datasets. |
 
 ```python
-result = fit_irreg_pca(..., training_mode="full_batch")
+# Functional API
+result = fit_irreg_pca(..., training_mode="mini_batch", batch_size=32)
+
+# Config API
+cfg = IrregPCAConfig(n_components=3, training_mode="mini_batch", batch_size=32)
+result = IrregPCA(config=cfg).fit(sample_ids=..., locations=..., values=...)
 ```
 
 ## Integration / inner-product modes

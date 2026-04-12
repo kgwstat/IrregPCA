@@ -1,6 +1,6 @@
-from .devices import resolve_device
-from .callbacks import TrainingEvent, CallbackList
+from .callbacks import CallbackList, TrainingEvent
 from .checkpointing import Checkpoint
+from .devices import resolve_device
 from .engine import fit_sequential
 
 __all__ = [

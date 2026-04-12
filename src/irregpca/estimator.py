@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import torch
 
 from .config import IrregPCAConfig
 from .objectives.quadrature import make_measure
-from .result import IrregPCAResult
+from .result import IrregPCAResult, LossHistory
 from .training.engine import fit_sequential
 from .utils.random import seed_everything
 
@@ -155,7 +156,7 @@ class IrregPCA:
         # fitted attributes
         self.mean_model_: torch.nn.Module | None = None
         self.component_models_: list[torch.nn.Module] | None = None
-        self.history_ = None
+        self.history_: LossHistory | None = None
         self.result_: IrregPCAResult | None = None
         self.input_dim_: int | None = None
         self.device_: str | None = None
@@ -253,16 +254,19 @@ class IrregPCA:
     def mean(self, locations: torch.Tensor) -> torch.Tensor:
         """Evaluate the fitted mean function."""
         self._check_fitted()
+        assert self.result_ is not None
         return self.result_.mean(locations)
 
     def component(self, index: int, locations: torch.Tensor) -> torch.Tensor:
         """Evaluate a single principal component function (0-based)."""
         self._check_fitted()
+        assert self.result_ is not None
         return self.result_.component(index, locations)
 
     def components(self, locations: torch.Tensor) -> torch.Tensor:
         """Evaluate all component functions, shape ``(N, n_components)``."""
         self._check_fitted()
+        assert self.result_ is not None
         return self.result_.components(locations)
 
 

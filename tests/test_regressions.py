@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from irregpca import IrregPCA, IrregPCAResult
+from irregpca import IrregPCA
 from irregpca.data.schemas import GroupedObservationDataset
 from irregpca.data.split import split_by_sample_id
 

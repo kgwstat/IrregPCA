@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import time
-from typing import Callable
+from collections.abc import Callable
 
 import torch
 from torch import optim
@@ -12,7 +11,6 @@ from ..result import IrregPCAResult, LossHistory
 from .callbacks import CallbackList, TrainingEvent
 from .checkpointing import Checkpoint
 from .devices import resolve_device
-from .metrics import ComponentMetrics, EpochMetrics
 
 
 def _set_grad(models: list[torch.nn.Module], active_idx: int) -> None:
@@ -151,10 +149,7 @@ def fit_sequential(
         optimizer = optim.Adam(model.parameters(), lr=lr)
         checkpoint = Checkpoint(model, patience=patience)
 
-        epoch_start = time.perf_counter()
         for epoch in range(epochs):
-            t0 = time.perf_counter()
-
             # train step
             model.train()
             optimizer.zero_grad()

@@ -1,14 +1,17 @@
+# mypy: ignore-errors
+# Legacy fitting path — retained for backward compatibility.
+# The canonical implementation is in irregpca.training.engine.
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import torch
 from torch import optim
 
+from .estimate import covariance_fn, inner_product, mean_fn
 from .model import DefaultModel, train_only
-from .estimate import mean_fn, covariance_fn, inner_product
-from .utils import split_data
 from .result import IrregPCAResult, LossHistory
+from .utils import split_data
 
 
 def _parse_input(
@@ -148,28 +151,33 @@ def _fit_irreg_pca_core(
         models = [model_factory(d).to(device=device) for _ in range(k + 1)]
 
     # --- loss functions ---
+    def _make_component_loss(idx: int):
+        def loss(models, data):
+            orth = (
+                torch.stack(
+                    [
+                        inner_product(models[i], models[idx], device=device).pow(2)
+                        for i in range(1, idx)
+                    ]
+                ).sum()
+                if idx > 1
+                else torch.tensor(0.0, device=device)
+            )
+            return (
+                -covariance_fn(models[idx], data)
+                + 0.5 * inner_product(models[idx], models[idx], device=device).pow(2)
+                + orth
+            )
+
+        return loss
+
     lossfn = [None] * (k + 1)
     lossfn[0] = lambda models, data: (
         -mean_fn(models[0], data)
         + 0.5 * inner_product(models[0], models[0], device=device)
     )
     for j in range(1, k + 1):
-        lossfn[j] = (
-            lambda j: lambda models, data: (
-                -covariance_fn(models[j], data)
-                + 0.5 * inner_product(models[j], models[j], device=device).pow(2)
-                + (
-                    torch.stack(
-                        [
-                            inner_product(models[i], models[j], device=device).pow(2)
-                            for i in range(1, j)
-                        ]
-                    ).sum()
-                    if j > 1
-                    else torch.tensor(0.0, device=device)
-                )
-            )
-        )(j)
+        lossfn[j] = _make_component_loss(j)
 
     def loss_joint(models, data):
         return lossfn[0](models, data) + torch.stack(

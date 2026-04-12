@@ -41,4 +41,5 @@ class DefaultModel(FunctionalModel):
         """
         x = torch.tanh(self.layer1(x))
         x = torch.tanh(self.layer2(x))
-        return self.layer3(x)
+        out: torch.Tensor = self.layer3(x)
+        return out

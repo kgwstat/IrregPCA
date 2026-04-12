@@ -6,9 +6,9 @@ import pytest
 import torch
 
 from irregpca.objectives.quadrature import (
+    MonteCarloMeasure,
     UnitIntervalGridMeasure,
     WeightedDiscreteMeasure,
-    MonteCarloMeasure,
     make_measure,
 )
 

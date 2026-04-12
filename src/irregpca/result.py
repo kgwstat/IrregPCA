@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 import torch
 
@@ -73,7 +71,8 @@ class IrregPCAResult:
         locs = locations.to(torch.device(self.device))
         self.mean_model.eval()
         with torch.no_grad():
-            return self.mean_model(locs).squeeze(-1)
+            out: torch.Tensor = self.mean_model(locs).squeeze(-1)
+        return out
 
     def component(self, index: int, locations: torch.Tensor) -> torch.Tensor:
         """Evaluate a single principal component function (0-based).
@@ -103,7 +102,8 @@ class IrregPCAResult:
         model = self.component_models[index]
         model.eval()
         with torch.no_grad():
-            return model(locs).squeeze(-1)
+            comp: torch.Tensor = model(locs).squeeze(-1)
+        return comp
 
     def components(self, locations: torch.Tensor) -> torch.Tensor:
         """Evaluate all component functions stacked along the last dimension.
@@ -243,7 +243,7 @@ class IrregPCAResult:
         torch.save(self, str(path))
 
     @staticmethod
-    def load(path: str | Path) -> "IrregPCAResult":
+    def load(path: str | Path) -> IrregPCAResult:
         """Load a previously saved result.
 
         Parameters
@@ -254,9 +254,10 @@ class IrregPCAResult:
         -------
         IrregPCAResult
         """
-        return torch.load(str(path), weights_only=False)
+        loaded: IrregPCAResult = torch.load(str(path), weights_only=False)
+        return loaded
 
-    def to(self, device: str | torch.device) -> "IrregPCAResult":
+    def to(self, device: str | torch.device) -> IrregPCAResult:
         """Move all models to ``device`` and return self.
 
         Parameters

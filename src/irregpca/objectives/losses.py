@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import torch
 
-from .mean import mean_fn_packed
 from .covariance import covariance_fn_packed
+from .mean import mean_fn_packed
 from .penalties import norm_penalty, orthogonality_penalty
 from .quadrature import InnerProductMeasure
 

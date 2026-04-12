@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import torch
-import pytest
 
-from irregpca.objectives.mean import mean_fn_packed
 from irregpca.objectives.covariance import covariance_fn_packed
+from irregpca.objectives.mean import mean_fn_packed
 
 
 def make_simple_model(val: float):

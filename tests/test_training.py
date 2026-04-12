@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 import torch
 
 from irregpca import IrregPCA, fit_irreg_pca
@@ -59,7 +58,7 @@ class TestEarlyStoppingRestoration:
         # best_epochs should be set
         assert all(e >= 0 for e in h.best_epochs)
         # best_valid_losses should be finite
-        assert all(not (v != v) for v in h.best_valid_losses)  # not NaN
+        assert all(v == v for v in h.best_valid_losses)  # not NaN
 
     def test_callbacks_receive_best_info(self, small_dataset):
         events = []

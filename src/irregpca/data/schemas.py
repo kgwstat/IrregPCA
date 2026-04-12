@@ -61,7 +61,7 @@ class GroupedObservationDataset:
         sample_ids: torch.Tensor,
         locations: torch.Tensor,
         values: torch.Tensor,
-    ) -> "GroupedObservationDataset":
+    ) -> GroupedObservationDataset:
         """Build from flat split arrays sorted by sample_id.
 
         Parameters
@@ -99,7 +99,7 @@ class GroupedObservationDataset:
         )
 
     @classmethod
-    def from_packed(cls, data: torch.Tensor) -> "GroupedObservationDataset":
+    def from_packed(cls, data: torch.Tensor) -> GroupedObservationDataset:
         """Build from a packed tensor of shape ``(N, d+2)``.
 
         Columns: ``[sample_id, loc_1, ..., loc_d, value]``.
@@ -123,7 +123,7 @@ class GroupedObservationDataset:
             values=data[:, -1],
         )
 
-    def to_device(self, device: torch.device) -> "GroupedObservationDataset":
+    def to_device(self, device: torch.device) -> GroupedObservationDataset:
         """Move tensor attributes to ``device`` (not memmap arrays).
 
         Parameters

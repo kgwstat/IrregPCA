@@ -1,5 +1,6 @@
 import torch
 
+
 def inner_product(model1, model2, device):
     grid = torch.linspace(0, 1, steps=4096).to(device).unsqueeze(-1)
     vals1 = model1(grid).squeeze(-1)
@@ -13,7 +14,7 @@ def mean_fn(model, data):
 
     unique_idx, inverse = torch.unique(idx, return_inverse=True)
     n = unique_idx.numel()
-    
+
     vals = model(loc).squeeze(-1) * obs
     sample_sums = vals.new_zeros(n)
     sample_sums.scatter_add_(0, inverse, vals)

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import pytest
 import torch
 from torch.utils.data import DataLoader
 
-from irregpca.data.schemas import GroupedObservationDataset
-from irregpca.data.dataset import GroupedMapDataset
-from irregpca.data.collate import grouped_collate_fn
 from irregpca.data.batching import GroupedBatchSampler
+from irregpca.data.collate import grouped_collate_fn
+from irregpca.data.dataset import GroupedMapDataset
+from irregpca.data.schemas import GroupedObservationDataset
 
 
 def make_grouped(n_samples: int = 10, obs_per: int = 5) -> GroupedObservationDataset:

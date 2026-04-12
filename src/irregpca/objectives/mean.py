@@ -80,4 +80,5 @@ def mean_fn_packed(
     sample_sums.scatter_add_(0, inverse, vals)
     sample_counts = torch.bincount(inverse).to(vals.dtype)
 
-    return (sample_sums / sample_counts).mean()
+    result: torch.Tensor = (sample_sums / sample_counts).mean()
+    return result

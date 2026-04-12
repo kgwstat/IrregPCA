@@ -1,14 +1,14 @@
+from .covariance import covariance_fn_grouped
+from .losses import build_loss_fns
+from .mean import mean_fn_grouped
+from .penalties import orthogonality_penalty
 from .quadrature import (
     InnerProductMeasure,
+    MonteCarloMeasure,
     UnitIntervalGridMeasure,
     WeightedDiscreteMeasure,
-    MonteCarloMeasure,
     make_measure,
 )
-from .mean import mean_fn_grouped
-from .covariance import covariance_fn_grouped
-from .penalties import orthogonality_penalty
-from .losses import build_loss_fns
 
 __all__ = [
     "InnerProductMeasure",

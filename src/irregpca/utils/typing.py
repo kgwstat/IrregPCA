@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union
+
 import torch
 
 # Type aliases — shape annotations only; not enforced at runtime

@@ -57,7 +57,7 @@ def covariance_fn_grouped(
     # within-sample term: only samples with >= 2 observations
     mask = group_lengths >= 2
     if mask.sum() < 2:
-        return weighted.new_tensor(0.0)
+        return torch.zeros(1, dtype=weighted.dtype, device=weighted.device).squeeze()
 
     s1 = sums1[mask]
     s2 = sums2[mask]
@@ -104,7 +104,7 @@ def covariance_fn_packed(
     vals = model(loc).squeeze(-1) * obs
 
     if n < 2:
-        return vals.new_tensor(0.0)
+        return torch.zeros(1, dtype=vals.dtype, device=vals.device).squeeze()
 
     sample_counts = torch.bincount(inverse).to(vals.dtype)
 
@@ -123,7 +123,7 @@ def covariance_fn_packed(
     m = sample_counts.shape[0]
 
     if m < 2:
-        return vals.new_tensor(0.0)
+        return torch.zeros(1, dtype=vals.dtype, device=vals.device).squeeze()
 
     within_sample = (
         (sample_sums1.pow(2) - sample_sums2)
