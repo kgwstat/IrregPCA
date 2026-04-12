@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import torch
+
+if TYPE_CHECKING:
+    import matplotlib.figure
 
 
 @dataclass
@@ -228,6 +232,72 @@ class IrregPCAResult:
             for j in range(self.n_components):
                 gram[i, j] = (evals[i] * evals[j]).mean()
         return gram
+
+    # ------------------------------------------------------------------ #
+    # Visualisation                                                         #
+    # ------------------------------------------------------------------ #
+
+    def plot_loss(
+        self,
+        figsize: tuple[float, float] | None = None,
+    ) -> "matplotlib.figure.Figure":
+        """Plot training and validation loss curves for each fitted model.
+
+        One subplot is drawn per model (mean first, then each component).
+        Each subplot shows train and validation loss vs. epoch, with a
+        vertical dashed line marking the best-validation-loss epoch.
+
+        Parameters
+        ----------
+        figsize : (width, height) or None
+            Passed to ``matplotlib.pyplot.subplots``.  Defaults to
+            ``(5 * (1 + n_components), 4)``.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+
+        Raises
+        ------
+        ImportError
+            If ``matplotlib`` is not installed.
+        """
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError as exc:
+            raise ImportError(
+                "matplotlib is required for plot_loss. "
+                "Install it with: pip install matplotlib"
+            ) from exc
+
+        n_models = 1 + self.n_components
+        if figsize is None:
+            figsize = (5 * n_models, 4)
+
+        fig, axes = plt.subplots(1, n_models, figsize=figsize, squeeze=False)
+        axes = axes[0]
+
+        labels = ["mean"] + [f"component {i}" for i in range(self.n_components)]
+
+        for j, (ax, label) in enumerate(zip(axes, labels)):
+            train_losses = self.history.component_train[j]
+            valid_losses = self.history.component_valid[j]
+            epochs = list(range(len(train_losses)))
+
+            ax.plot(epochs, train_losses, label="train")
+            ax.plot(epochs, valid_losses, label="valid")
+
+            if j < len(self.history.best_epochs):
+                best_ep = self.history.best_epochs[j]
+                ax.axvline(best_ep, color="gray", linestyle="--", linewidth=0.8, label=f"best (ep {best_ep})")
+
+            ax.set_title(label)
+            ax.set_xlabel("epoch")
+            ax.set_ylabel("loss")
+            ax.legend(fontsize=8)
+
+        fig.tight_layout()
+        return fig
 
     # ------------------------------------------------------------------ #
     # Serialisation helpers                                                 #
