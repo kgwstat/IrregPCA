@@ -18,8 +18,8 @@ pip install irregpca
 For development:
 
 ```bash
-git clone https://github.com/kgwaghmare/irregpca
-cd irregpca
+git clone https://github.com/kgwstat/IrregPCA
+cd IrregPCA
 pip install -e ".[dev]"
 ```
 

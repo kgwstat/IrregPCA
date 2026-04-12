@@ -5,8 +5,8 @@ Thank you for your interest in contributing.
 ## Development setup
 
 ```bash
-git clone https://github.com/kgwaghmare/irregpca
-cd irregpca
+git clone https://github.com/kgwstat/IrregPCA
+cd IrregPCA
 pip install -e ".[dev]"
 ```
 
@@ -70,7 +70,7 @@ examples/            # Runnable example scripts
 
 ## Reporting bugs
 
-Please open an issue at https://github.com/kgwaghmare/irregpca/issues with:
+Please open an issue at https://github.com/kgwstat/IrregPCA/issues with:
 - a minimal reproducible example,
 - the Python and PyTorch versions,
 - the device being used (CPU / CUDA / MPS).
