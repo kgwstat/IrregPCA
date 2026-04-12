@@ -134,10 +134,10 @@ result = fit_irreg_pca(..., measure=measure)
 # Norms of component functions under the integration measure
 result.component_norms()            # (n_components,)
 
-# Proxy for principal values (squared norms)
+# Proxy for principal values (squared L²-norms of fitted component functions)
 result.principal_values()           # (n_components,)
 
-# Fraction of total variance explained per component
+# Fraction of total variance explained per component (proxy — see note below)
 result.explained_variance_proxy()   # (n_components,), sums to 1
 
 # Gram matrix of inner products between component functions
@@ -146,6 +146,63 @@ result.orthogonality_matrix()       # (n_components, n_components)
 # Best epoch per model (mean + components)
 result.history.best_epochs          # list of ints
 ```
+
+**On `explained_variance_proxy`:** in classical PCA the fraction of variance
+explained by component *k* is the *k*-th eigenvalue divided by the total sum
+of eigenvalues. No exact eigenvalues are available here, so the proxy
+substitutes the squared L²-norm of the fitted component function ‖φ̂ₖ‖² for
+the *k*-th eigenvalue. Because component functions are constrained to be
+orthonormal during training, a well-converged fit will have ‖φ̂ₖ‖ ≈ 1 and
+`principal_values()` ≈ (1, 1, …). The proxy therefore reflects the *relative*
+residual reduction achieved by each sequentially fitted component and should be
+interpreted with care: it is not the true fraction of L²-process variance
+captured and has no direct connection to eigenvalues of the covariance
+operator. For a rigorous variance decomposition, project the centred
+observations onto the fitted component functions manually.
+
+## Inspecting training history
+
+`result.history` exposes per-epoch losses for every fitted model (mean
+function + each principal component). Use this to verify convergence and
+diagnose over- or under-training.
+
+```python
+import matplotlib.pyplot as plt
+
+history   = result.history
+n_models  = 1 + result.n_components   # mean + components
+
+fig, axes = plt.subplots(1, n_models, figsize=(4 * n_models, 3), sharey=False)
+
+for i, ax in enumerate(axes):
+    label        = "mean" if i == 0 else f"component {i}"
+    train_losses = history.train_losses[i]   # list[float], one per epoch
+    valid_losses = history.valid_losses[i]   # list[float] or None
+    best_epoch   = history.best_epochs[i]    # int
+
+    ax.plot(train_losses, label="train")
+    if valid_losses is not None:
+        ax.plot(valid_losses, label="valid")
+    ax.axvline(best_epoch, color="red", linestyle="--", label=f"best={best_epoch}")
+    ax.set_title(label)
+    ax.set_xlabel("epoch")
+    ax.legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+**Convergence diagnostics:**
+
+- If `best_epoch` equals `epochs`, training was cut short — increase `epochs`
+  or lower `lr`.
+- If `best_epoch` is very small (< 10 % of `epochs`), `patience` may be too
+  aggressive; consider raising it.
+- A large gap between train and valid loss suggests overfitting to the observed
+  locations — try reducing MLP width/depth or adding regularisation.
+- Call `result.orthogonality_matrix()` after fitting. Off-diagonal entries
+  should be near zero; large values indicate under-training or a poorly chosen
+  integration measure.
 
 ## Serialisation
 
@@ -203,12 +260,6 @@ ds = load_memmap_dataset(
   objective. Results may differ from full-batch training on identical data.
 - GPU reproducibility may vary across hardware and PyTorch versions even under a
   fixed seed.
-* **Checking convergence:** inspect `result.history.best_epochs` and plot
-  training loss. If `best_epoch` equals `epochs`, increase `epochs` or lower
-  `lr`. If it is very small (< 10 % of `epochs`), `patience` may be too tight.
-* **Validating orthogonality:** call `result.orthogonality_matrix()` after
-  fitting. Off-diagonal entries should be close to zero; large values indicate
-  under-training or a poorly chosen integration measure.
 
 ## Citation
 
