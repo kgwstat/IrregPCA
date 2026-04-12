@@ -12,7 +12,9 @@ perceptrons trained sequentially via gradient descent, based on a risk
 minimisation methodology derived from the Eckart–Young–Mirsky theorem for the
 Hilbert–Schmidt norm.
 
-![Method overview](assets/illustration.png)
+<div align="center">
+  <img src="assets/illustration.png" alt="Method overview" width="250" />
+</div>
 
 ## Installation
 
