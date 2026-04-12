@@ -11,6 +11,7 @@ from ..result import IrregPCAResult, LossHistory
 from .callbacks import CallbackList, TrainingEvent
 from .checkpointing import Checkpoint
 from .devices import resolve_device
+from .metrics import EpochMetrics
 
 
 def _set_grad(models: list[torch.nn.Module], active_idx: int) -> None:
@@ -120,6 +121,7 @@ def fit_sequential(
     )
 
     cb_list.fire(TrainingEvent(stage="train_start", device=device_str))
+    cb_list.fire_lifecycle("on_train_begin", n_components=n_components)
 
     # ------------------------------------------------------------------ #
     # Sequential training loop                                              #
@@ -140,6 +142,7 @@ def fit_sequential(
                 device=device_str,
             )
         )
+        cb_list.fire_lifecycle("on_component_begin", component_index=j)
 
         _set_grad(models, j)
         optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -193,6 +196,14 @@ def fit_sequential(
                         best_valid_loss=checkpoint.best_valid_loss,
                     )
                     cb_list.fire(event)
+                    cb_list.fire_lifecycle(
+                        "on_epoch_end",
+                        metrics=EpochMetrics(
+                            epoch=epoch,
+                            train_loss=train_loss_val,
+                            valid_loss=valid_loss_val,
+                        ),
+                    )
 
                 if checkpoint.should_stop:
                     if verbose:
@@ -216,11 +227,13 @@ def fit_sequential(
         checkpoint.restore()
         history.best_epochs.append(checkpoint.best_epoch)
         history.best_valid_losses.append(checkpoint.best_valid_loss)
+        cb_list.fire_lifecycle("on_component_end", best_epoch=checkpoint.best_epoch)
 
     # freeze all models for inference
     _set_grad(models, -1)
 
     cb_list.fire(TrainingEvent(stage="fit_end", device=device_str))
+    cb_list.fire_lifecycle("on_train_end")
 
     return IrregPCAResult(
         mean_model=models[0],

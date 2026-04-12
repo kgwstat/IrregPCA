@@ -240,7 +240,7 @@ class IrregPCAResult:
     def plot_loss(
         self,
         figsize: tuple[float, float] | None = None,
-    ) -> "matplotlib.figure.Figure":
+    ) -> matplotlib.figure.Figure:
         """Plot training and validation loss curves for each fitted model.
 
         One subplot is drawn per model (mean first, then each component).
@@ -279,7 +279,7 @@ class IrregPCAResult:
 
         labels = ["mean"] + [f"component {i}" for i in range(self.n_components)]
 
-        for j, (ax, label) in enumerate(zip(axes, labels)):
+        for j, (ax, label) in enumerate(zip(axes, labels)):  # noqa: B905
             train_losses = self.history.component_train[j]
             valid_losses = self.history.component_valid[j]
             epochs = list(range(len(train_losses)))

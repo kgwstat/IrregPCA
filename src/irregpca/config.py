@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import torch
@@ -81,6 +81,7 @@ class IrregPCAConfig:
     validation_frequency: int = 1
     measure: Any | None = None
     verbose: bool = False
+    callbacks: list = field(default_factory=list)
 
     def __post_init__(self) -> None:
         validate_hyperparams(

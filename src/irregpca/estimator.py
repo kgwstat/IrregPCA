@@ -145,6 +145,8 @@ class IrregPCA:
 
         self._model_factory = model_factory
         self._callbacks = callbacks
+        if callbacks:
+            self.config.callbacks = list(callbacks)
 
         # fitted attributes
         self.mean_model_: torch.nn.Module | None = None

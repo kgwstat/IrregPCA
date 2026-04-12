@@ -204,6 +204,36 @@ plt.show()
   should be near zero; large values indicate under-training or a poorly chosen
   integration measure.
 
+### Live loss plot during training
+
+```python
+from irregpca import fit_irreg_pca, LiveLossPlotCallback
+
+callback = LiveLossPlotCallback(
+    update_every=10,        # redraw every 10 epochs (faster for large datasets)
+    save_path="loss.png",   # optional: save figure when training ends
+)
+
+result = fit_irreg_pca(
+    sample_ids=sample_ids,
+    locations=locations,
+    values=values,
+    n_components=3,
+    epochs=600,
+    callbacks=[callback],
+)
+```
+
+This opens a figure with one panel per model (mean + each component). The
+active panel updates as training progresses; completed panels are greyed out.
+A red dotted line marks the best (early-stopped) epoch once each model
+finishes.
+
+> **Note:** live plotting requires `matplotlib` (`pip install irregpca[viz]`).
+> In non-interactive environments (batch jobs, CI), omit the callback or set
+> `update_every` to a large value and use `save_path` to write the figure to
+> disk instead.
+
 ## Serialisation
 
 ```python

@@ -1,6 +1,7 @@
 from .config import IrregPCAConfig
 from .estimator import IrregPCA, fit_irreg_pca
 from .result import IrregPCAResult, LossHistory
+from .training.callbacks import LiveLossPlotCallback
 
 __all__ = [
     "IrregPCA",
@@ -8,4 +9,5 @@ __all__ = [
     "LossHistory",
     "IrregPCAConfig",
     "fit_irreg_pca",
+    "LiveLossPlotCallback",
 ]
