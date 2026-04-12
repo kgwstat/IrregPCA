@@ -18,8 +18,10 @@ Hilbert–Schmidt norm.
 
 ## Installation
 
+This package is not yet published to PyPI. Install directly from GitHub:
+
 ```bash
-pip install irregpca
+pip install git+https://github.com/kgwstat/IrregPCA.git
 ```
 
 For development:
