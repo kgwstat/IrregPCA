@@ -1,9 +1,6 @@
 # IrregPCA
 
 [![Tests](https://github.com/kgwstat/IrregPCA/actions/workflows/ci.yml/badge.svg)](https://github.com/kgwstat/IrregPCA/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/kgwstat/IrregPCA/branch/main/graph/badge.svg)](https://codecov.io/gh/kgwstat/IrregPCA)
-[![PyPI version](https://img.shields.io/pypi/v/irregpca.svg)](https://pypi.org/project/irregpca/)
-[![Python](https://img.shields.io/pypi/pyversions/irregpca.svg)](https://pypi.org/project/irregpca/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Neural-network functional PCA for irregularly observed data.
