@@ -27,8 +27,11 @@ coverage.xml
 # Type checking
 .mypy_cache/
 
-# IDE
+# macOS metadata
 .DS_Store
+**/.DS_Store
+
+# IDE
 .vscode/
 .idea/
 
