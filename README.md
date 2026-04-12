@@ -215,7 +215,7 @@ If you use IrregPCA in your research, please cite:
 
 ```bibtex
 @software{irregpca,
-  author  = {Kartik G. Waghmare and Stoecker, Almond and Panaretos, Victor M.},
+  author  = {Waghmare, Kartik G. and Stoecker, Almond and Panaretos, Victor M.},
   title   = {{IrregPCA}: Neural-network functional PCA for irregularly observed data},
   url     = {https://github.com/kgwstat/IrregPCA},
   year    = {2025},
