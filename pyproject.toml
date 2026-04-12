@@ -47,9 +47,9 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/kgwaghmare/irregpca"
-Repository = "https://github.com/kgwaghmare/irregpca"
-"Bug Tracker" = "https://github.com/kgwaghmare/irregpca/issues"
+Homepage   = "https://github.com/kgwstat/IrregPCA"
+Repository = "https://github.com/kgwstat/IrregPCA"
+"Bug Tracker" = "https://github.com/kgwstat/IrregPCA/issues"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
