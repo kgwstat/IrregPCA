@@ -202,6 +202,25 @@ ds = load_memmap_dataset(
   objective. Results may differ from full-batch training on identical data.
 - GPU reproducibility may vary across hardware and PyTorch versions even under a
   fixed seed.
+* **Checking convergence:** inspect `result.history.best_epochs` and plot
+  training loss. If `best_epoch` equals `epochs`, increase `epochs` or lower
+  `lr`. If it is very small (< 10 % of `epochs`), `patience` may be too tight.
+* **Validating orthogonality:** call `result.orthogonality_matrix()` after
+  fitting. Off-diagonal entries should be close to zero; large values indicate
+  under-training or a poorly chosen integration measure.
+
+## Citation
+
+If you use IrregPCA in your research, please cite:
+
+```bibtex
+@software{irregpca,
+  author  = {<Your Name> and Stoecker, Almond and Panaretos, Victor M.},
+  title   = {{IrregPCA}: Neural-network functional PCA for irregularly observed data},
+  url     = {https://github.com/kgwstat/IrregPCA},
+  year    = {2025},
+}
+```
 
 ## License
 
