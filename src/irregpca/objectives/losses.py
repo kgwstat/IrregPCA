@@ -49,15 +49,13 @@ def build_loss_fns(
         models: list[torch.nn.Module],
         data: torch.Tensor,
     ) -> torch.Tensor:
-        return (
-            -mean_fn_packed(models[0], data)
-            + norm_penalty(models[0], measure, device)
-        )
+        return -mean_fn_packed(models[0], data) + norm_penalty(models[0], measure, device)
 
     lossfns[0] = _mean_loss
 
     # component losses (closure over j)
     for j in range(1, k + 1):
+
         def _make_component_loss(j: int) -> Callable:
             def _component_loss(
                 models: list[torch.nn.Module],
@@ -72,6 +70,7 @@ def build_loss_fns(
                     device=device,
                 )
                 return -cov + np_ + orth
+
             return _component_loss
 
         lossfns[j] = _make_component_loss(j)

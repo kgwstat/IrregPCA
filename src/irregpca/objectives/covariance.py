@@ -68,9 +68,7 @@ def covariance_fn_grouped(
 
     # between-sample term
     cluster_means = s1 / cnt
-    between_sample = (
-        cluster_means.sum().pow(2) - cluster_means.pow(2).sum()
-    ) / (m * (m - 1))
+    between_sample = (cluster_means.sum().pow(2) - cluster_means.pow(2).sum()) / (m * (m - 1))
 
     return within_sample - between_sample
 
@@ -114,7 +112,7 @@ def covariance_fn_packed(
     sample_sums1.scatter_add_(0, inverse, vals)
     sample_sums2.scatter_add_(0, inverse, vals.pow(2))
 
-    mask = (sample_counts > 1)
+    mask = sample_counts > 1
 
     sample_sums1 = sample_sums1[mask]
     sample_sums2 = sample_sums2[mask]
@@ -126,15 +124,11 @@ def covariance_fn_packed(
         return torch.zeros(1, dtype=vals.dtype, device=vals.device).squeeze()
 
     within_sample = (
-        (sample_sums1.pow(2) - sample_sums2)
-        / (sample_counts * (sample_counts - 1))
+        (sample_sums1.pow(2) - sample_sums2) / (sample_counts * (sample_counts - 1))
     ).mean()
 
     cluster_means = sample_sums1 / sample_counts
 
-    between_sample = (
-        cluster_means.sum().pow(2)
-        - cluster_means.pow(2).sum()
-    ) / (m * (m - 1))
+    between_sample = (cluster_means.sum().pow(2) - cluster_means.pow(2).sum()) / (m * (m - 1))
 
     return within_sample - between_sample

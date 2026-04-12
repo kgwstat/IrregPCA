@@ -7,6 +7,7 @@ def inner_product(model1, model2, device):
     vals2 = model2(grid).squeeze(-1)
     return (vals1 * vals2).mean()
 
+
 def mean_fn(model, data):
     idx = data[:, 0].long()
     loc = data[:, 1:-1]
@@ -21,6 +22,7 @@ def mean_fn(model, data):
     sample_counts = torch.bincount(inverse).to(vals.dtype)
 
     return (sample_sums / sample_counts).mean()
+
 
 def covariance_fn(model, data):
     idx = data[:, 0].long()
@@ -43,7 +45,7 @@ def covariance_fn(model, data):
     sample_sums1.scatter_add_(0, inverse, vals)
     sample_sums2.scatter_add_(0, inverse, vals.pow(2))
 
-    mask = (sample_counts > 1)
+    mask = sample_counts > 1
 
     sample_sums1 = sample_sums1[mask]
     sample_sums2 = sample_sums2[mask]
@@ -55,16 +57,11 @@ def covariance_fn(model, data):
         return vals.new_tensor(0.0)
 
     within_sample = (
-        (sample_sums1.pow(2) - sample_sums2)
-        / (sample_counts * (sample_counts - 1))
+        (sample_sums1.pow(2) - sample_sums2) / (sample_counts * (sample_counts - 1))
     ).mean()
 
     cluster_means = sample_sums1 / sample_counts
 
-    between_sample = (
-        cluster_means.sum().pow(2)
-        - cluster_means.pow(2).sum()
-    ) / (m * (m - 1))
+    between_sample = (cluster_means.sum().pow(2) - cluster_means.pow(2).sum()) / (m * (m - 1))
 
     return within_sample - between_sample
-

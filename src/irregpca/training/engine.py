@@ -96,18 +96,14 @@ def fit_sequential(
     # ------------------------------------------------------------------ #
     # Create models                                                         #
     # ------------------------------------------------------------------ #
-    models: list[torch.nn.Module] = [
-        make_model(d, model_factory).to(device) for _ in range(k + 1)
-    ]
+    models: list[torch.nn.Module] = [make_model(d, model_factory).to(device) for _ in range(k + 1)]
 
     # ------------------------------------------------------------------ #
     # Build loss functions                                                  #
     # ------------------------------------------------------------------ #
     lossfns = build_loss_fns(k=k, measure=measure, device=device)
 
-    def loss_joint(
-        models: list[torch.nn.Module], data: torch.Tensor
-    ) -> torch.Tensor:
+    def loss_joint(models: list[torch.nn.Module], data: torch.Tensor) -> torch.Tensor:
         parts = [lossfns[j](models, data) for j in range(k + 1)]
         return torch.stack(parts).sum()
 
@@ -201,8 +197,7 @@ def fit_sequential(
                 if checkpoint.should_stop:
                     if verbose:
                         print(
-                            f"  Early stop at epoch {epoch}. "
-                            f"Best epoch: {checkpoint.best_epoch}."
+                            f"  Early stop at epoch {epoch}. Best epoch: {checkpoint.best_epoch}."
                         )
                     cb_list.fire(
                         TrainingEvent(

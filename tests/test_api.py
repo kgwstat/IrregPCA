@@ -48,8 +48,12 @@ class TestFitAPI:
     def test_fit_irreg_pca_convenience(self, small_dataset):
         sample_ids, locations, values = small_dataset
         result = fit_irreg_pca(
-            sample_ids=sample_ids, locations=locations, values=values,
-            n_components=1, epochs=3, patience=100
+            sample_ids=sample_ids,
+            locations=locations,
+            values=values,
+            n_components=1,
+            epochs=3,
+            patience=100,
         )
         assert isinstance(result, IrregPCAResult)
 

@@ -3,7 +3,7 @@ from torch import nn
 
 
 class DefaultModel(nn.Module):
-    def __init__(self, d: int = 1, width = 20):
+    def __init__(self, d: int = 1, width=20):
         super().__init__()
         self.layer1 = nn.Linear(d, width)
         self.layer2 = nn.Linear(width, width)
@@ -15,7 +15,8 @@ class DefaultModel(nn.Module):
         x = self.layer3(x)
         return x
 
+
 def train_only(j, models):
     for i, model in enumerate(models):
         for parameters in model.parameters():
-            parameters.requires_grad = (i == j)
+            parameters.requires_grad = i == j

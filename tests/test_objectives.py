@@ -8,9 +8,11 @@ from irregpca.objectives.mean import mean_fn_packed
 
 def make_simple_model(val: float):
     """A constant-function 'model' for testing."""
+
     class ConstModel(torch.nn.Module):
         def forward(self, x):
             return torch.full((x.shape[0], 1), val, dtype=x.dtype, device=x.device)
+
     return ConstModel()
 
 
@@ -60,11 +62,14 @@ class TestCovarianceFnPacked:
     def test_single_obs_per_sample_returns_zero(self):
         # samples with 1 observation can't contribute to within-sample term
         n = 5
-        data = torch.cat([
-            torch.arange(n, dtype=torch.float).unsqueeze(-1),
-            torch.rand(n, 1),
-            torch.rand(n, 1),
-        ], dim=1)
+        data = torch.cat(
+            [
+                torch.arange(n, dtype=torch.float).unsqueeze(-1),
+                torch.rand(n, 1),
+                torch.rand(n, 1),
+            ],
+            dim=1,
+        )
         model = make_simple_model(1.0)
         result = covariance_fn_packed(model, data)
         # Only 1 observation per sample, so within_sample term is zero for all

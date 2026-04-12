@@ -38,10 +38,7 @@ def split_by_sample_id(
     """
     n = dataset.n_samples
     if n < 2:
-        raise ValueError(
-            f"Cannot split a dataset with {n} sample(s). "
-            "Need at least 2 samples."
-        )
+        raise ValueError(f"Cannot split a dataset with {n} sample(s). Need at least 2 samples.")
 
     cut = max(1, min(n - 1, int(train_ratio * n)))
 
@@ -85,9 +82,11 @@ def _index_subset(
     vals = dataset.values
     if not isinstance(locs, torch.Tensor):
         import numpy as np
+
         locs = torch.from_numpy(np.array(locs))
     if not isinstance(vals, torch.Tensor):
         import numpy as np
+
         vals = torch.from_numpy(np.array(vals))
 
     sub_sample_ids = dataset.sample_ids[sample_indices]

@@ -44,26 +44,19 @@ def validate_hyperparams(
     if patience < 0:
         raise ValueError(f"`patience` must be >= 0, got {patience}.")
     if not (0.0 < valid_split < 1.0):
-        raise ValueError(
-            f"`valid_split` must be in (0, 1), got {valid_split}."
-        )
+        raise ValueError(f"`valid_split` must be in (0, 1), got {valid_split}.")
     if batch_size is not None and batch_size < 1:
         raise ValueError(f"`batch_size` must be >= 1, got {batch_size}.")
     if num_workers < 0:
         raise ValueError(f"`num_workers` must be >= 0, got {num_workers}.")
     if quadrature_points < 2:
-        raise ValueError(
-            f"`quadrature_points` must be >= 2, got {quadrature_points}."
-        )
+        raise ValueError(f"`quadrature_points` must be >= 2, got {quadrature_points}.")
     if validation_frequency < 1:
-        raise ValueError(
-            f"`validation_frequency` must be >= 1, got {validation_frequency}."
-        )
+        raise ValueError(f"`validation_frequency` must be >= 1, got {validation_frequency}.")
     valid_training_modes = {"full_batch", "mini_batch", "streaming"}
     if training_mode not in valid_training_modes:
         raise ValueError(
-            f"`training_mode` must be one of {valid_training_modes}, "
-            f"got {training_mode!r}."
+            f"`training_mode` must be one of {valid_training_modes}, got {training_mode!r}."
         )
     valid_integration_modes = {"grid", "monte_carlo", "weighted_discrete"}
     if integration_mode not in valid_integration_modes:

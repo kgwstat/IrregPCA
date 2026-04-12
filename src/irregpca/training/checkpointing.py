@@ -48,8 +48,7 @@ class Checkpoint:
             self.best_valid_loss = valid_loss
             self.best_epoch = epoch
             self._best_state = {
-                name: v.detach().clone()
-                for name, v in self._model.state_dict().items()
+                name: v.detach().clone() for name, v in self._model.state_dict().items()
             }
             self._wait = 0
             return True

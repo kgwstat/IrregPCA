@@ -38,18 +38,13 @@ def _parse_input(
             "`sample_ids`, `locations`, and `values` (split mode)."
         )
     if sample_ids.ndim != 1:
-        raise ValueError(
-            f"Expected `sample_ids` to be 1-D, got shape {tuple(sample_ids.shape)}."
-        )
+        raise ValueError(f"Expected `sample_ids` to be 1-D, got shape {tuple(sample_ids.shape)}.")
     if locations.ndim != 2:
         raise ValueError(
-            f"Expected `locations` to be 2-D with shape (N, d), "
-            f"got shape {tuple(locations.shape)}."
+            f"Expected `locations` to be 2-D with shape (N, d), got shape {tuple(locations.shape)}."
         )
     if values.ndim != 1:
-        raise ValueError(
-            f"Expected `values` to be 1-D, got shape {tuple(values.shape)}."
-        )
+        raise ValueError(f"Expected `values` to be 1-D, got shape {tuple(values.shape)}.")
     n = sample_ids.shape[0]
     if not (locations.shape[0] == n and values.shape[0] == n):
         raise ValueError(
@@ -132,9 +127,7 @@ class IrregPCA:
             self.config = config
         else:
             if n_components is None:
-                raise ValueError(
-                    "Provide either `n_components` or a `config` object."
-                )
+                raise ValueError("Provide either `n_components` or a `config` object.")
             self.config = IrregPCAConfig(
                 n_components=n_components,
                 epochs=epochs,

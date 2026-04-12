@@ -46,9 +46,11 @@ class GroupedMapDataset(Dataset):
 
         if not isinstance(locs, torch.Tensor):
             import numpy as np
+
             locs = torch.from_numpy(np.asarray(locs))
         if not isinstance(vals, torch.Tensor):
             import numpy as np
+
             vals = torch.from_numpy(np.asarray(vals))
 
         start = int(self._grouped.offsets[i])

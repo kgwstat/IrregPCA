@@ -30,12 +30,20 @@ class TestTrainingBasic:
     def test_deterministic_with_seed(self, small_dataset):
         sample_ids, locations, values = small_dataset
         r1 = fit_irreg_pca(
-            sample_ids=sample_ids, locations=locations, values=values,
-            n_components=1, epochs=3, random_state=99,
+            sample_ids=sample_ids,
+            locations=locations,
+            values=values,
+            n_components=1,
+            epochs=3,
+            random_state=99,
         )
         r2 = fit_irreg_pca(
-            sample_ids=sample_ids, locations=locations, values=values,
-            n_components=1, epochs=3, random_state=99,
+            sample_ids=sample_ids,
+            locations=locations,
+            values=values,
+            n_components=1,
+            epochs=3,
+            random_state=99,
         )
         grid = torch.linspace(0, 1, 20).unsqueeze(-1)
         mu1 = r1.mean(grid)
@@ -62,12 +70,14 @@ class TestEarlyStoppingRestoration:
 
     def test_callbacks_receive_best_info(self, small_dataset):
         events = []
+
         def cb(event):
             events.append(event.copy())
+
         sample_ids, locations, values = small_dataset
-        IrregPCA(
-            n_components=1, epochs=5, patience=100, callbacks=[cb]
-        ).fit(sample_ids=sample_ids, locations=locations, values=values)
+        IrregPCA(n_components=1, epochs=5, patience=100, callbacks=[cb]).fit(
+            sample_ids=sample_ids, locations=locations, values=values
+        )
         epoch_events = [e for e in events if e["stage"] == "epoch_end"]
         assert len(epoch_events) > 0
         for ev in epoch_events:

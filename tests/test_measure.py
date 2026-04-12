@@ -15,14 +15,17 @@ from irregpca.objectives.quadrature import (
 
 def constant_model(c: float):
     """Wrapper that behaves like an nn.Module: takes (N,1) → (N,1)."""
+
     def f(x: torch.Tensor) -> torch.Tensor:
         return torch.full((x.shape[0], 1), c, dtype=x.dtype, device=x.device)
+
     return f
 
 
 def sine_model():
     def f(x: torch.Tensor) -> torch.Tensor:
         return torch.sin(2 * math.pi * x)  # x is (N,1), result (N,1)
+
     return f
 
 
@@ -67,8 +70,10 @@ class TestWeightedDiscreteMeasure:
 class TestMonteCarloMeasure:
     def test_constant_approx(self):
         torch.manual_seed(42)
+
         def sampler(n, device):
             return torch.rand(n, 1, device=device)
+
         m = MonteCarloMeasure(sampler=sampler, num_draws=10000)
         ip = m.integrate_product(constant_model(1.0), constant_model(1.0), torch.device("cpu"))
         assert abs(float(ip) - 1.0) < 0.05

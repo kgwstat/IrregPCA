@@ -28,6 +28,7 @@ def packed_dataset(small_dataset):
 def fitted_result(small_dataset):
     """A pre-fitted IrregPCAResult on the small dataset."""
     from irregpca import fit_irreg_pca
+
     sample_ids, locations, values = small_dataset
     return fit_irreg_pca(
         sample_ids=sample_ids,

@@ -75,9 +75,7 @@ def _parse_input(
                 f"got shape {tuple(locations.shape)}."
             )
         if values.ndim != 1:
-            raise ValueError(
-                f"Expected `values` to be 1-D, got shape {tuple(values.shape)}."
-            )
+            raise ValueError(f"Expected `values` to be 1-D, got shape {tuple(values.shape)}.")
         n = sample_ids.shape[0]
         if not (locations.shape[0] == n and values.shape[0] == n):
             raise ValueError(
@@ -173,16 +171,16 @@ def _fit_irreg_pca_core(
 
     lossfn = [None] * (k + 1)
     lossfn[0] = lambda models, data: (
-        -mean_fn(models[0], data)
-        + 0.5 * inner_product(models[0], models[0], device=device)
+        -mean_fn(models[0], data) + 0.5 * inner_product(models[0], models[0], device=device)
     )
     for j in range(1, k + 1):
         lossfn[j] = _make_component_loss(j)
 
     def loss_joint(models, data):
-        return lossfn[0](models, data) + torch.stack(
-            [lossfn[j](models, data) for j in range(1, k + 1)]
-        ).sum()
+        return (
+            lossfn[0](models, data)
+            + torch.stack([lossfn[j](models, data) for j in range(1, k + 1)]).sum()
+        )
 
     # --- history accumulators ---
     history = LossHistory(
@@ -206,9 +204,7 @@ def _fit_irreg_pca_core(
 
         wait = 0
         min_valid_loss = float("inf")
-        best_state = {
-            name: v.detach().clone() for name, v in model.state_dict().items()
-        }
+        best_state = {name: v.detach().clone() for name, v in model.state_dict().items()}
 
         for epoch in range(epochs):
             # train step
@@ -239,10 +235,7 @@ def _fit_irreg_pca_core(
             # early stopping
             if loss_valid < min_valid_loss:
                 min_valid_loss = loss_valid
-                best_state = {
-                    name: v.detach().clone()
-                    for name, v in model.state_dict().items()
-                }
+                best_state = {name: v.detach().clone() for name, v in model.state_dict().items()}
                 wait = 0
             else:
                 wait += 1

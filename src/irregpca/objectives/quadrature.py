@@ -226,6 +226,7 @@ def make_measure(
         # Default: uniform [0,1]^1 sampler
         def _uniform_sampler(n: int, device: torch.device) -> torch.Tensor:
             return torch.rand(n, 1, device=device)
+
         return MonteCarloMeasure(sampler=_uniform_sampler, num_draws=quadrature_points)
     if integration_mode == "weighted_discrete":
         raise ValueError(

@@ -52,15 +52,9 @@ def load_memmap_dataset(
     for contiguous group access. Use :func:`build_memmap_dataset` to create
     sorted files from raw data.
     """
-    locations_mm = np.memmap(
-        str(locations_path), dtype=dtype, mode="r", shape=(n_obs, input_dim)
-    )
-    values_mm = np.memmap(
-        str(values_path), dtype=dtype, mode="r", shape=(n_obs,)
-    )
-    sample_ids_arr = np.memmap(
-        str(sample_ids_path), dtype="int64", mode="r", shape=(n_obs,)
-    )
+    locations_mm = np.memmap(str(locations_path), dtype=dtype, mode="r", shape=(n_obs, input_dim))
+    values_mm = np.memmap(str(values_path), dtype=dtype, mode="r", shape=(n_obs,))
+    sample_ids_arr = np.memmap(str(sample_ids_path), dtype="int64", mode="r", shape=(n_obs,))
 
     # build grouped metadata from the sample IDs
     ids_tensor = torch.from_numpy(np.array(sample_ids_arr))

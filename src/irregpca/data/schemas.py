@@ -167,7 +167,5 @@ class GroupedObservationDataset:
             vals = torch.from_numpy(vals)
 
         # expand sample_ids to per-observation level
-        expanded_ids = torch.repeat_interleave(
-            self.sample_ids.float(), self.lengths
-        ).unsqueeze(-1)
+        expanded_ids = torch.repeat_interleave(self.sample_ids.float(), self.lengths).unsqueeze(-1)
         return torch.cat([expanded_ids, locs.float(), vals.float().unsqueeze(-1)], dim=1)
