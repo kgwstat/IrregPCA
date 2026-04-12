@@ -37,7 +37,12 @@ jobs:
         run: |
           pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Run tests
-        run: pytest tests/ -m "not slow" --cov=irregpca --cov-report=term-missing
+        run: pytest tests/ -m "not slow" --cov=irregpca --cov-report=term-missing --cov-report=xml --cov-fail-under=60
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
 
   build:
     name: Build distribution
