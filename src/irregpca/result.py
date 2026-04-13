@@ -289,7 +289,13 @@ class IrregPCAResult:
 
             if j < len(self.history.best_epochs):
                 best_ep = self.history.best_epochs[j]
-                ax.axvline(best_ep, color="gray", linestyle="--", linewidth=0.8, label=f"best (ep {best_ep})")
+                ax.axvline(
+                    best_ep,
+                    color="gray",
+                    linestyle="--",
+                    linewidth=0.8,
+                    label=f"best (ep {best_ep})",
+                )
 
             ax.set_title(label)
             ax.set_xlabel("epoch")
