@@ -10,7 +10,7 @@ class TestTrainingBasic:
         sample_ids, locations, values = small_dataset
         est = IrregPCA(n_components=1, epochs=20, patience=1000, random_state=0)
         result = est.fit(sample_ids=sample_ids, locations=locations, values=values)
-        hist = result.history.component_train[0]  # mean model
+        hist = result.history.train_losses[0]  # mean model
         # Loss should generally improve over 20 epochs
         assert len(hist) > 0
         # Not requiring strict monotone decrease, just that we ran
@@ -22,8 +22,8 @@ class TestTrainingBasic:
             sample_ids=sample_ids, locations=locations, values=values
         )
         h = result.history
-        assert len(h.component_train) == 3  # mean + 2 components
-        assert len(h.component_valid) == 3
+        assert len(h.train_losses) == 3  # mean + 2 components
+        assert len(h.valid_losses) == 3
         assert len(h.best_epochs) == 3
         assert len(h.best_valid_losses) == 3
 

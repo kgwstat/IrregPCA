@@ -18,8 +18,8 @@ class LossHistory:
     ----------
     joint_train : list of float
     joint_valid : list of float
-    component_train : list of list of float
-    component_valid : list of list of float
+    train_losses : list of list of float
+    valid_losses : list of list of float
     best_epochs : list of int
         Best epoch index per fitted model (mean model first, then components).
     best_valid_losses : list of float
@@ -28,8 +28,8 @@ class LossHistory:
 
     joint_train: list[float] = field(default_factory=list)
     joint_valid: list[float] = field(default_factory=list)
-    component_train: list[list[float]] = field(default_factory=list)
-    component_valid: list[list[float]] = field(default_factory=list)
+    train_losses: list[list[float]] = field(default_factory=list)
+    valid_losses: list[list[float | None]] = field(default_factory=list)
     best_epochs: list[int] = field(default_factory=list)
     best_valid_losses: list[float] = field(default_factory=list)
 
@@ -280,12 +280,13 @@ class IrregPCAResult:
         labels = ["mean"] + [f"component {i}" for i in range(self.n_components)]
 
         for j, (ax, label) in enumerate(zip(axes, labels)):  # noqa: B905
-            train_losses = self.history.component_train[j]
-            valid_losses = self.history.component_valid[j]
+            train_losses = self.history.train_losses[j]
+            valid_losses = self.history.valid_losses[j]  # may be None
             epochs = list(range(len(train_losses)))
 
             ax.plot(epochs, train_losses, label="train")
-            ax.plot(epochs, valid_losses, label="valid")
+            if valid_losses is not None:
+                ax.plot(epochs, valid_losses, label="valid")
 
             if j < len(self.history.best_epochs):
                 best_ep = self.history.best_epochs[j]

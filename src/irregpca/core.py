@@ -186,8 +186,8 @@ def _fit_irreg_pca_core(
     history = LossHistory(
         joint_train=[],
         joint_valid=[],
-        component_train=[[] for _ in range(k + 1)],
-        component_valid=[[] for _ in range(k + 1)],
+        train_losses=[[] for _ in range(k + 1)],
+        valid_losses=[[] for _ in range(k + 1)],
     )
 
     # --- sequential training ---
@@ -227,8 +227,8 @@ def _fit_irreg_pca_core(
             joint_valid_val = loss_joint(models, data_valid).item()
 
             # record history
-            history.component_train[j].append(train_loss_val)
-            history.component_valid[j].append(valid_loss_val)
+            history.train_losses[j].append(train_loss_val)
+            history.valid_losses[j].append(valid_loss_val)
             history.joint_train.append(joint_train_val)
             history.joint_valid.append(joint_valid_val)
 

@@ -114,8 +114,8 @@ def fit_sequential(
     history = LossHistory(
         joint_train=[],
         joint_valid=[],
-        component_train=[[] for _ in range(k + 1)],
-        component_valid=[[] for _ in range(k + 1)],
+        train_losses=[[] for _ in range(k + 1)],
+        valid_losses=[[] for _ in range(k + 1)],
         best_epochs=[],
         best_valid_losses=[],
     )
@@ -167,8 +167,8 @@ def fit_sequential(
                 train_loss_val = loss_train.item()
                 valid_loss_val = loss_valid.item()
 
-                history.component_train[j].append(train_loss_val)
-                history.component_valid[j].append(valid_loss_val)
+                history.train_losses[j].append(train_loss_val)
+                history.valid_losses[j].append(valid_loss_val)
                 history.joint_train.append(joint_train_val)
                 history.joint_valid.append(joint_valid_val)
 
