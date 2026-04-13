@@ -6,9 +6,10 @@ Fit IrregPCA to scalar functional data observed on an irregular subset of
 which is required for d > 1.
 """
 
-import torch
 import matplotlib.pyplot as plt
-from irregpca import fit_irreg_pca
+import torch
+
+from irregpca import LiveLossPlotCallback, fit_irreg_pca
 
 # ── Synthetic data ────────────────────────────────────────────────────────────
 # N_CURVES curves, each observed at a random number of (s, t) locations in
@@ -40,7 +41,9 @@ sample_ids = torch.cat(sample_ids_list)   # (N,)
 locations  = torch.cat(locations_list)    # (N, 2)
 values     = torch.cat(values_list)       # (N,)
 
-# ── Fit ───────────────────────────────────────────────────────────────────────
+# ── Fit with live loss visualization ─────────────────────────────────────────
+loss_cb = LiveLossPlotCallback(save_path="synthetic_irregular_2d_loss.png")
+
 result = fit_irreg_pca(
     sample_ids=sample_ids,
     locations=locations,
@@ -53,6 +56,7 @@ result = fit_irreg_pca(
     integration_mode="monte_carlo",   # required for d > 1
     random_state=42,
     verbose=True,
+    callbacks=[loss_cb],
 )
 
 print("Best epochs         :", result.history.best_epochs)
@@ -77,6 +81,7 @@ for ax, surface, title in zip(
     axes,
     [mu, phi1, phi2],
     ["Mean function  μ(s,t)", "Component 1  φ₁(s,t)", "Component 2  φ₂(s,t)"],
+    strict=False,
 ):
     im = ax.imshow(
         surface.numpy(), origin="lower", extent=[0, 1, 0, 1],

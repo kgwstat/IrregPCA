@@ -6,8 +6,11 @@ that the fitted functions recover the true structure.
 from __future__ import annotations
 
 import math
+
+import matplotlib.pyplot as plt
 import torch
-from irregpca import IrregPCA, IrregPCAConfig
+
+from irregpca import IrregPCA, IrregPCAConfig, LiveLossPlotCallback
 
 torch.manual_seed(42)
 
@@ -52,8 +55,10 @@ locations  = torch.cat(locs_list, dim=0)
 values     = torch.cat(vals_list)
 
 # ------------------------------------------------------------------
-# 3. Fit with IrregPCAConfig
+# 3. Fit with live loss visualization
 # ------------------------------------------------------------------
+loss_cb = LiveLossPlotCallback(save_path="synthetic_irregular_1d_loss.png")
+
 cfg = IrregPCAConfig(
     n_components=2,
     epochs=400,
@@ -62,7 +67,7 @@ cfg = IrregPCAConfig(
     random_state=42,
     verbose=True,
 )
-est = IrregPCA(config=cfg)
+est = IrregPCA(config=cfg, callbacks=[loss_cb])
 result = est.fit(sample_ids=sample_ids, locations=locations, values=values)
 
 # ------------------------------------------------------------------
@@ -76,3 +81,28 @@ mse_mean = ((mu_hat - mu_true) ** 2).mean()
 print(f"\nMean MSE on grid: {mse_mean:.6f}")
 print(f"Best epochs per model: {result.history.best_epochs}")
 print(f"Gram matrix of components:\n{result.orthogonality_matrix()}")
+
+# ------------------------------------------------------------------
+# 5. Plot fitted vs true functions
+# ------------------------------------------------------------------
+t = grid.squeeze().numpy()
+phi1_hat = result.component(0, grid)
+phi2_hat = result.component(1, grid)
+
+fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
+pairs = [
+    (mu_hat.numpy(), mu_true.numpy(), "Mean  μ(t)"),
+    (phi1_hat.numpy(), true_phi1(grid.squeeze()).numpy(), "Component 1  φ₁(t)"),
+    (phi2_hat.numpy(), true_phi2(grid.squeeze()).numpy(), "Component 2  φ₂(t)"),
+]
+for ax, (fitted, truth, title) in zip(axes, pairs, strict=False):
+    ax.plot(t, truth, lw=2, color="gray", linestyle="--", label="true")
+    ax.plot(t, fitted, lw=2, label="fitted")
+    ax.set_title(title)
+    ax.set_xlabel("t")
+    ax.legend(fontsize=8)
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig("synthetic_irregular_1d_example.png", dpi=150)
+plt.show()

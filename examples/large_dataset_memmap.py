@@ -13,13 +13,12 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-import torch
 from torch.utils.data import DataLoader
 
-from irregpca.data.memmap import load_memmap_dataset
-from irregpca.data.dataset import GroupedMapDataset
-from irregpca.data.collate import grouped_collate_fn
 from irregpca.data.batching import GroupedBatchSampler
+from irregpca.data.collate import grouped_collate_fn
+from irregpca.data.dataset import GroupedMapDataset
+from irregpca.data.memmap import load_memmap_dataset
 
 # ------------------------------------------------------------------
 # 1. Write fake data to disk
@@ -43,7 +42,9 @@ with tempfile.TemporaryDirectory() as tmpdir:
     vals_path = tmpdir / "values.bin"
     ids_path  = tmpdir / "sample_ids.bin"
 
-    np.memmap(str(locs_path), dtype="float32", mode="w+", shape=(n_obs, input_dim))[:] = locations_arr
+    np.memmap(str(locs_path), dtype="float32", mode="w+", shape=(n_obs, input_dim))[:] = (
+        locations_arr
+    )
     np.memmap(str(vals_path), dtype="float32", mode="w+", shape=(n_obs,))[:] = values_arr
     np.memmap(str(ids_path),  dtype="int64",   mode="w+", shape=(n_obs,))[:] = sample_ids_arr
 

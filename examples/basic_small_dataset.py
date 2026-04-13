@@ -2,13 +2,16 @@
 
 This example shows the minimal workflow:
 1. Prepare split-format input tensors.
-2. Fit IrregPCA.
+2. Fit IrregPCA with live loss visualization.
 3. Evaluate the mean and component functions on a grid.
+4. Plot the fitted functions.
 """
 from __future__ import annotations
 
+import matplotlib.pyplot as plt
 import torch
-from irregpca import fit_irreg_pca
+
+from irregpca import LiveLossPlotCallback, fit_irreg_pca
 
 torch.manual_seed(0)
 
@@ -28,8 +31,10 @@ values = (
 )
 
 # ------------------------------------------------------------------
-# 2. Fit
+# 2. Fit with live loss visualization
 # ------------------------------------------------------------------
+loss_cb = LiveLossPlotCallback(save_path="basic_small_dataset_loss.png")
+
 result = fit_irreg_pca(
     sample_ids=sample_ids,
     locations=locations,
@@ -40,6 +45,7 @@ result = fit_irreg_pca(
     patience=100,
     random_state=0,
     verbose=True,
+    callbacks=[loss_cb],
 )
 
 # ------------------------------------------------------------------
@@ -55,3 +61,25 @@ print(f"\nMean range:       [{mu.min():.3f}, {mu.max():.3f}]")
 print(f"Component 1 norm: {result.component_norms()[0]:.4f}")
 print(f"Component 2 norm: {result.component_norms()[1]:.4f}")
 print(f"Explained variance: {result.explained_variance_proxy().tolist()}")
+
+# ------------------------------------------------------------------
+# 4. Plot fitted functions
+# ------------------------------------------------------------------
+x = grid.squeeze().numpy()
+
+fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
+for ax, curve, title in zip(
+    axes,
+    [mu.numpy(), phi1.numpy(), phi2.numpy()],
+    ["Mean  μ(t)", "Component 1  φ₁(t)", "Component 2  φ₂(t)"],
+    strict=False,
+):
+    ax.plot(x, curve, lw=2)
+    ax.set_title(title)
+    ax.set_xlabel("t")
+    ax.set_ylabel("value")
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig("basic_small_dataset_example.png", dpi=150)
+plt.show()
