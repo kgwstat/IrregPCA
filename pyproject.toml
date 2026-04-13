@@ -41,10 +41,6 @@ dev = [
 viz = [
     "matplotlib>=3.5",
 ]
-docs = [
-    "mkdocs>=1.5",
-    "mkdocs-material>=9.0",
-]
 
 [project.urls]
 Homepage   = "https://github.com/kgwstat/IrregPCA"
