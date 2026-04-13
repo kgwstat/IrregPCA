@@ -78,9 +78,14 @@ class CallbackList:
         self._callbacks: list[Callable] = list(callbacks) if callbacks else []
 
     def fire(self, event: TrainingEvent) -> None:
-        """Invoke all registered callbacks with the event."""
+        """Invoke all registered callbacks with the event.
+
+        Skips class-based callbacks (those without ``__call__``); they are
+        handled by :meth:`fire_lifecycle`.
+        """
         for cb in self._callbacks:
-            cb(event.as_dict())
+            if callable(cb):
+                cb(event.as_dict())
 
     def fire_lifecycle(self, method_name: str, **kwargs) -> None:
         """Call a named lifecycle method on class-based callbacks that have it."""
