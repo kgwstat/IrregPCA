@@ -72,7 +72,6 @@ for ax, curve, title in zip(
     axes,
     [mu.numpy(), phi1.numpy(), phi2.numpy()],
     ["Mean  μ(t)", "Component 1  φ₁(t)", "Component 2  φ₂(t)"],
-    strict=False,
 ):
     ax.plot(x, curve, lw=2)
     ax.set_title(title)

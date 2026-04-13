@@ -145,6 +145,7 @@ class LiveLossPlotCallback:
         self._train_lines: list = []
         self._valid_lines: list = []
         self._best_vlines: list = []
+        self._jupyter_handle: Any = None
 
         self._current_component: int = 0
         self._epoch_buffer_train: list[float] = []
@@ -159,6 +160,8 @@ class LiveLossPlotCallback:
         fig_w = self.figsize_per_panel[0] * n_panels
         fig_h = self.figsize_per_panel[1]
 
+        from matplotlib.ticker import MaxNLocator
+
         plt.ion()
         self._fig, axes = plt.subplots(
             1, n_panels, figsize=(fig_w, fig_h), squeeze=False
@@ -171,6 +174,7 @@ class LiveLossPlotCallback:
             ax.set_xlabel("epoch", fontsize=8)
             ax.set_ylabel("loss", fontsize=8)
             ax.tick_params(labelsize=7)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
             (train_line,) = ax.plot([], [], color="steelblue", lw=1.5, label="train")
             (valid_line,) = ax.plot(
@@ -187,7 +191,20 @@ class LiveLossPlotCallback:
 
         self._fig.suptitle("IrregPCA — training loss", fontsize=10, y=1.01)
         self._fig.tight_layout()
-        plt.pause(0.01)
+
+        # In Jupyter, create a live display handle so _redraw_current can
+        # update the same output cell instead of emitting new static images.
+        try:
+            from IPython import get_ipython
+            from IPython.display import display
+            if get_ipython() is not None:
+                self._jupyter_handle = display(self._fig, display_id=True)
+                return
+        except ImportError:
+            pass
+
+        self._fig.canvas.draw()
+        self._plt.pause(0.01)
 
     def on_component_begin(self, component_index: int, **kwargs) -> None:
         """Called before training each model (mean = index 0, PC k = index k)."""
@@ -217,7 +234,11 @@ class LiveLossPlotCallback:
         for spine in ax.spines.values():
             spine.set_edgecolor("#bbbbbb")
 
-        self._plt.pause(0.01)
+        if self._jupyter_handle is not None:
+            self._jupyter_handle.update(self._fig)
+        else:
+            self._fig.canvas.draw()
+            self._plt.pause(0.001)
 
     def on_train_end(self, **kwargs) -> None:
         """Called once after all components are trained."""
@@ -254,5 +275,8 @@ class LiveLossPlotCallback:
 
         ax.relim()
         ax.autoscale_view()
-        self._fig.canvas.draw_idle()
-        self._plt.pause(0.001)
+        if self._jupyter_handle is not None:
+            self._jupyter_handle.update(self._fig)
+        else:
+            self._fig.canvas.draw()
+            self._plt.pause(0.001)

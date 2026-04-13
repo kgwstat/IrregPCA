@@ -178,7 +178,9 @@ def fit_sequential(
                 if verbose:
                     print(
                         f"  epoch {epoch:4d} | train {train_loss_val:.6f} "
-                        f"| valid {valid_loss_val:.6f}"
+                        f"| valid {valid_loss_val:.6f}",
+                        end="\r",
+                        flush=True,
                     )
 
                 if cb_list:
@@ -223,6 +225,8 @@ def fit_sequential(
                     )
                     break
 
+        if verbose:
+            print()  # end the \r line
         # ----- ALWAYS restore best state (fixes the early-stopping bug) -----
         checkpoint.restore()
         history.best_epochs.append(checkpoint.best_epoch)
