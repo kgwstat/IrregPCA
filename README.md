@@ -13,7 +13,7 @@ minimisation methodology derived from the Eckart–Young–Mirsky theorem for th
 Hilbert–Schmidt norm.
 
 <div align="center">
-  <img src="assets/illustration.png" alt="Method overview" width="250" />
+  <img src="illustration.png" alt="Method overview" width="250" />
 </div>
 
 ## Installation
