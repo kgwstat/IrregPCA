@@ -10,10 +10,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `scripts/` directory with reproducible simulation and benchmark scripts.
+
+* `LiveLossPlotCallback` in `irregpca.training.callbacks`: live-updating loss
+  plot during training, one subplot per model, with best-epoch marker.
+  Exported from the top-level `irregpca` namespace.
+* `IrregPCAResult.plot_loss()`: post-training loss curve visualisation.
+  Requires `matplotlib` (`pip install irregpca[viz]`).
+* `IrregPCAConfig.callbacks` field: pass a list of callback objects to
+  `fit_irreg_pca()` or `IrregPCA.fit()`.
+* `examples/synthetic_irregular_2d.py`: end-to-end example for d=2 domains
+  using `integration_mode="monte_carlo"`.
+* `scripts/` directory with reproducible simulation and benchmark scripts.
+
+### Fixed
+
+* `IrregPCAResult.plot_loss()`: corrected field names (`train_losses` /
+  `valid_losses` instead of `component_train` / `component_valid`).
+* `illustration.png` path in `README.md` corrected (removed spurious
+  `assets/` prefix).
+* Repository URLs in `pyproject.toml` and `CONTRIBUTING.md` corrected from
+  `kgwaghmare/irregpca` to `kgwstat/IrregPCA`.
 
 ### Changed
-- Ruff lint errors resolved across `src/` and `tests/`.
+
+* `requires-python` bumped to `>=3.10` to match CI-tested range.
+* Duplicate ruff and pytest configuration removed from `pyproject.toml`.
+* Ruff lint errors resolved across `src/` and `tests/`.
 
 ---
 
