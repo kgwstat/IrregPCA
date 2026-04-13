@@ -7,7 +7,7 @@ name = "irregpca"
 version = "0.2.0"
 description = "Neural-network functional PCA for irregularly observed data"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [
     { name = "Kartik G. Waghmare", email = "kartik.waghmare.stats@gmail.com" }
