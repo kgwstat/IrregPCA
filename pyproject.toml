@@ -7,7 +7,7 @@ name = "irregpca"
 version = "0.2.0"
 description = "Neural-network functional PCA for irregularly observed data"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [
     { name = "Kartik G. Waghmare", email = "kartik.waghmare.stats@gmail.com" }
@@ -18,6 +18,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -55,7 +56,7 @@ where = ["src"]
 include = ["irregpca*"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.9"
 strict = false
 warn_return_any = true
 warn_unused_configs = true
