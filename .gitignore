@@ -39,3 +39,6 @@ coverage.xml
 # Distribution
 *.whl
 *.tar.gz
+
+# Example script outputs
+*_example.png
