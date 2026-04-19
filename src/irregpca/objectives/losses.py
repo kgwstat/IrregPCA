@@ -6,7 +6,6 @@ import torch
 
 from .covariance import covariance_fn_packed
 from .mean import mean_fn_packed
-from .penalties import norm_penalty, orthogonality_penalty
 from .quadrature import InnerProductMeasure
 
 
@@ -25,9 +24,8 @@ def build_loss_fns(
     where ``data`` is a packed tensor of shape ``(N, d+2)``.
 
     The losses are:
-    - Mean: ``-mean_fn + 0.5 * ‖μ‖²`` (exact full-batch, quadrature approx)
-    - Component j: ``-cov_fn + 0.5 * ‖e_j‖⁴ + Σ_{i<j} ⟨e_i, e_j⟩²``
-      (exact full-batch objective, quadrature inner products)
+    - Mean:        ``-⟨μ, Y⟩ + 0.5 * ⟨μ, μ⟩``
+    - Component j: ``-cov_fn + 0.5 * ⟨e_j, e_j⟩² + Σ_{i<j} ⟨e_i, e_j⟩²``
 
     Parameters
     ----------
@@ -44,16 +42,15 @@ def build_loss_fns(
     """
     lossfns: list[Callable] = [None] * (k + 1)  # type: ignore[list-item]
 
-    # mean loss: -mean_fn + 0.5 * ||mu||^2
     def _mean_loss(
         models: list[torch.nn.Module],
         data: torch.Tensor,
     ) -> torch.Tensor:
-        return -mean_fn_packed(models[0], data) + norm_penalty(models[0], measure, device)
+        norm_sq = measure.integrate_product(models[0], models[0], device)
+        return -mean_fn_packed(models[0], data) + 0.5 * norm_sq
 
     lossfns[0] = _mean_loss
 
-    # component losses (closure over j)
     for j in range(1, k + 1):
 
         def _make_component_loss(j: int) -> Callable:
@@ -62,14 +59,12 @@ def build_loss_fns(
                 data: torch.Tensor,
             ) -> torch.Tensor:
                 cov = covariance_fn_packed(models[j], data)
-                np_ = norm_penalty(models[j], measure, device)
-                orth = orthogonality_penalty(
-                    models[j],
-                    prior_models=models[1:j],
-                    measure=measure,
-                    device=device,
-                )
-                return -cov + np_ + orth
+                norm_sq = measure.integrate_product(models[j], models[j], device)
+                orth = torch.stack([
+                    measure.integrate_product(models[j], prior, device).pow(2)
+                    for prior in models[1:j]
+                ]).sum() if j > 1 else torch.tensor(0.0, device=device)
+                return -cov + 0.5 * norm_sq.pow(2) + orth
 
             return _component_loss
 
