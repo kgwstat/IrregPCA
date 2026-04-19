@@ -1,3 +1,5 @@
+# LEGACY — not imported by the package. Superseded by models/mlp.py and models/resnet.py.
+# mypy: ignore-errors
 import torch
 from torch import nn
 

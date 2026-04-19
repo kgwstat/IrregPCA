@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import Any
+
 
 def validate_hyperparams(
     n_components: int,
@@ -13,6 +16,10 @@ def validate_hyperparams(
     validation_frequency: int,
     training_mode: str,
     integration_mode: str,
+    model_kind: str = "mlp",
+    hidden_width: int = 64,
+    hidden_depth: int = 2,
+    model_factory: Callable[..., Any] | None = None,
 ) -> None:
     """Validate IrregPCA hyperparameters, raising ValueError for invalid values.
 
@@ -29,6 +36,10 @@ def validate_hyperparams(
     validation_frequency : int
     training_mode : str
     integration_mode : str
+    model_kind : str
+    hidden_width : int
+    hidden_depth : int
+    model_factory : callable or None
 
     Raises
     ------
@@ -64,3 +75,13 @@ def validate_hyperparams(
             f"`integration_mode` must be one of {valid_integration_modes}, "
             f"got {integration_mode!r}."
         )
+    valid_model_kinds = {"mlp", "resnet"}
+    if model_factory is None and model_kind not in valid_model_kinds:
+        raise ValueError(
+            f"`model_kind` must be one of {valid_model_kinds} when `model_factory` is not "
+            f"provided, got {model_kind!r}."
+        )
+    if hidden_width < 1:
+        raise ValueError(f"`hidden_width` must be >= 1, got {hidden_width}.")
+    if hidden_depth < 1:
+        raise ValueError(f"`hidden_depth` must be >= 1, got {hidden_depth}.")

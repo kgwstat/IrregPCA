@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -57,6 +58,20 @@ class IrregPCAConfig:
         overrides ``integration_mode``.
     verbose : bool
         Print training progress (default ``False``).
+    model_kind : str
+        Built-in model architecture: ``"mlp"`` (default) or ``"resnet"``.
+        Ignored if ``model_factory`` is provided.
+    hidden_width : int
+        Number of units per hidden layer (default 64).
+    hidden_depth : int
+        Number of hidden layers (default 2).
+    activation : str
+        Activation function name: ``"tanh"`` (default) or ``"relu"``.
+    model_factory : callable or None
+        User-supplied factory ``factory(input_dim, output_dim, **model_kwargs)
+        -> nn.Module``. Overrides ``model_kind`` when provided.
+    model_kwargs : dict or None
+        Extra keyword arguments forwarded to ``model_factory``.
 
     Examples
     --------
@@ -82,6 +97,13 @@ class IrregPCAConfig:
     measure: Any | None = None
     verbose: bool = False
     callbacks: list = field(default_factory=list)
+    # Model architecture
+    model_kind: str = "mlp"
+    hidden_width: int = 64
+    hidden_depth: int = 2
+    activation: str = "tanh"
+    model_factory: Callable[..., torch.nn.Module] | None = field(default=None, repr=False)
+    model_kwargs: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         validate_hyperparams(
@@ -96,4 +118,8 @@ class IrregPCAConfig:
             validation_frequency=self.validation_frequency,
             training_mode=self.training_mode,
             integration_mode=self.integration_mode,
+            model_kind=self.model_kind,
+            hidden_width=self.hidden_width,
+            hidden_depth=self.hidden_depth,
+            model_factory=self.model_factory,
         )

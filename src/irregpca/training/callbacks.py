@@ -248,7 +248,11 @@ class LiveLossPlotCallback:
         if self.save_path is not None:
             self._fig.savefig(self.save_path, bbox_inches="tight", dpi=150)
 
-        plt.show()
+        # In Jupyter, the figure is already live in the output cell via
+        # _jupyter_handle — calling plt.show() here would emit a second
+        # static copy. Only call show() in non-Jupyter environments.
+        if self._jupyter_handle is None:
+            plt.show()
 
     # ── internal ──────────────────────────────────────────────────────────────
 

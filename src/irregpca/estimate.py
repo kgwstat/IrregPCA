@@ -1,3 +1,6 @@
+# LEGACY — not imported by the package.
+# Superseded by objectives/mean.py and objectives/covariance.py.
+# mypy: ignore-errors
 import torch
 
 

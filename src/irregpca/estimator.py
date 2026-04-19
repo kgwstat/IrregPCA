@@ -6,6 +6,7 @@ from typing import Any
 import torch
 
 from .config import IrregPCAConfig
+from .models.factory import build_model
 from .objectives.quadrature import make_measure
 from .result import IrregPCAResult, LossHistory
 from .training.engine import fit_sequential
@@ -115,13 +116,18 @@ class IrregPCA:
         valid_split: float = 0.2,
         random_state: int | None = None,
         device: str | torch.device | None = None,
-        model_factory: Callable[[int], torch.nn.Module] | None = None,
+        model_factory: Callable[..., torch.nn.Module] | None = None,
         verbose: bool = False,
         callbacks: list[Callable[[dict], None]] | None = None,
         training_mode: str = "full_batch",
         integration_mode: str = "grid",
         quadrature_points: int = 4096,
         measure: Any | None = None,
+        model_kind: str = "mlp",
+        hidden_width: int = 64,
+        hidden_depth: int = 2,
+        activation: str = "tanh",
+        model_kwargs: dict[str, Any] | None = None,
     ) -> None:
         if config is not None:
             self.config = config
@@ -141,9 +147,14 @@ class IrregPCA:
                 integration_mode=integration_mode,
                 quadrature_points=quadrature_points,
                 measure=measure,
+                model_kind=model_kind,
+                hidden_width=hidden_width,
+                hidden_depth=hidden_depth,
+                activation=activation,
+                model_factory=model_factory,
+                model_kwargs=model_kwargs,
             )
 
-        self._model_factory = model_factory
         self._callbacks = callbacks
         if callbacks:
             self.config.callbacks = list(callbacks)
@@ -205,11 +216,33 @@ class IrregPCA:
         if cfg.random_state is not None:
             seed_everything(cfg.random_state)
 
+        d = locations_t.shape[1]
         measure = make_measure(
             integration_mode=cfg.integration_mode,
             quadrature_points=cfg.quadrature_points,
             custom_measure=cfg.measure,
+            input_dim=d,
         )
+
+        # Build a single-argument factory closure from config model fields.
+        # fit_sequential calls factory(input_dim) to create each model.
+        _mf = cfg.model_factory
+        _mk = cfg.model_kind
+        _w = cfg.hidden_width
+        _dep = cfg.hidden_depth
+        _act = cfg.activation
+        _mkw = cfg.model_kwargs
+
+        def _model_factory_from_config(input_dim: int) -> torch.nn.Module:
+            return build_model(
+                input_dim=input_dim,
+                model_kind=_mk,
+                width=_w,
+                depth=_dep,
+                activation=_act,
+                model_factory=_mf,
+                model_kwargs=_mkw,
+            )
 
         result = fit_sequential(
             sample_ids=sample_ids_t,
@@ -222,7 +255,7 @@ class IrregPCA:
             valid_split=cfg.valid_split,
             random_state=cfg.random_state,
             device=cfg.device,
-            model_factory=self._model_factory,
+            model_factory=_model_factory_from_config,
             verbose=cfg.verbose,
             callbacks=self._callbacks,
             measure=measure,
@@ -278,13 +311,18 @@ def fit_irreg_pca(
     valid_split: float = 0.2,
     random_state: int | None = None,
     device: str | torch.device | None = None,
-    model_factory: Callable[[int], torch.nn.Module] | None = None,
+    model_factory: Callable[..., torch.nn.Module] | None = None,
     verbose: bool = False,
     callbacks: list[Callable[[dict], None]] | None = None,
     training_mode: str = "full_batch",
     integration_mode: str = "grid",
     quadrature_points: int = 4096,
     measure: Any | None = None,
+    model_kind: str = "mlp",
+    hidden_width: int = 64,
+    hidden_depth: int = 2,
+    activation: str = "tanh",
+    model_kwargs: dict[str, Any] | None = None,
 ) -> IrregPCAResult:
     """Fit IrregPCA and return the result in a single call.
 
@@ -325,6 +363,11 @@ def fit_irreg_pca(
         integration_mode=integration_mode,
         quadrature_points=quadrature_points,
         measure=measure,
+        model_kind=model_kind,
+        hidden_width=hidden_width,
+        hidden_depth=hidden_depth,
+        activation=activation,
+        model_kwargs=model_kwargs,
     )
     return est.fit(
         data,

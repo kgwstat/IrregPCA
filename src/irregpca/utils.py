@@ -1,3 +1,5 @@
+# LEGACY — not imported by the package. Superseded by data/split.py.
+# mypy: ignore-errors
 import torch
 
 
