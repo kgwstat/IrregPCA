@@ -173,6 +173,7 @@ class LiveLossPlotCallback:
             ax.set_title(label, fontsize=9)
             ax.set_xlabel("epoch", fontsize=8)
             ax.set_ylabel("loss", fontsize=8)
+            ax.set_xlim(0, 10)  # Will autoscale after first epoch
             ax.tick_params(labelsize=7)
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
