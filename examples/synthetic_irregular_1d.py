@@ -85,15 +85,15 @@ print(f"Gram matrix of components:\n{result.orthogonality_matrix()}")
 # ------------------------------------------------------------------
 # 5. Plot fitted vs true functions
 # ------------------------------------------------------------------
-t = grid.squeeze().numpy()
+t = grid.squeeze().cpu().numpy()
 phi1_hat = result.component(0, grid)
 phi2_hat = result.component(1, grid)
 
 fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
 pairs = [
-    (mu_hat.numpy(), mu_true.numpy(), "Mean  μ(t)"),
-    (phi1_hat.numpy(), true_phi1(grid.squeeze()).numpy(), "Component 1  φ₁(t)"),
-    (phi2_hat.numpy(), true_phi2(grid.squeeze()).numpy(), "Component 2  φ₂(t)"),
+    (mu_hat.cpu().numpy(), mu_true.cpu().numpy(), "Mean  μ(t)"),
+    (phi1_hat.cpu().numpy(), true_phi1(grid.squeeze()).cpu().numpy(), "Component 1  φ₁(t)"),
+    (phi2_hat.cpu().numpy(), true_phi2(grid.squeeze()).cpu().numpy(), "Component 2  φ₂(t)"),
 ]
 for ax, (fitted, truth, title) in zip(axes, pairs, strict=False):
     ax.plot(t, truth, lw=2, color="gray", linestyle="--", label="true")

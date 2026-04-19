@@ -29,6 +29,13 @@ values = (
     torch.sin(2 * torch.pi * locations.squeeze())
     + 0.1 * torch.randn(n_samples * obs_per)
 )
+# the example dataset makes no sense.
+# fix. there should be some structure in the data that can be captured by PCA.
+# let's make the data more structured by adding a second component.
+values += 0.5 * torch.cos(4 * torch.pi * locations.squeeze())
+# no dependence on sample_ids! WTF. let's add some sample-specific variation.
+values += 0.2 * torch.repeat_interleave(torch.randn(n_samples), obs_per)
+
 
 # ------------------------------------------------------------------
 # 2. Fit with live loss visualization
@@ -65,12 +72,12 @@ print(f"Explained variance: {result.explained_variance_proxy().tolist()}")
 # ------------------------------------------------------------------
 # 4. Plot fitted functions
 # ------------------------------------------------------------------
-x = grid.squeeze().numpy()
+x = grid.squeeze().cpu().numpy()
 
 fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
 for ax, curve, title in zip(
     axes,
-    [mu.numpy(), phi1.numpy(), phi2.numpy()],
+    [mu.cpu().numpy(), phi1.cpu().numpy(), phi2.cpu().numpy()],
     ["Mean  μ(t)", "Component 1  φ₁(t)", "Component 2  φ₂(t)"],
 ):
     ax.plot(x, curve, lw=2)

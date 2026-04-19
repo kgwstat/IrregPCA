@@ -84,7 +84,7 @@ for ax, surface, title in zip(
     strict=False,
 ):
     im = ax.imshow(
-        surface.numpy(), origin="lower", extent=[0, 1, 0, 1],
+        surface.cpu().numpy(), origin="lower", extent=[0, 1, 0, 1],
         aspect="equal", cmap="RdBu_r",
     )
     ax.set_title(title)

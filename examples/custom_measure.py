@@ -69,9 +69,9 @@ print("Monte Carlo measure — component norm:",
 # ------------------------------------------------------------------
 # 3. Plot fitted component functions from both measures
 # ------------------------------------------------------------------
-x = grid.squeeze().numpy()
-phi_wt = result_wt.component(0, grid).numpy()
-phi_mc = result_mc.component(0, grid).numpy()
+x = grid.squeeze().cpu().numpy()
+phi_wt = result_wt.component(0, grid).cpu().numpy()
+phi_mc = result_mc.component(0, grid).cpu().numpy()
 
 fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
 for ax, phi, title in zip(
