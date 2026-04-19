@@ -1,8 +1,5 @@
 # IrregPCA
 
-```
-<!-- [![Tests](https://github.com/kgwstat/IrregPCA/actions/workflows/ci.yml/badge.svg)](https://github.com/kgwstat/IrregPCA/actions/workflows/ci.yml) -->
-```
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Neural-network functional PCA for irregularly observed data.
