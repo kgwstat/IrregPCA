@@ -46,8 +46,8 @@ def validate_hyperparams(
     ValueError
         If any hyperparameter is out of the valid range or has an invalid value.
     """
-    if n_components < 1:
-        raise ValueError(f"`n_components` must be >= 1, got {n_components}.")
+    if n_components < 0:
+        raise ValueError(f"`n_components` must be >= 0, got {n_components}.")
     if epochs < 1:
         raise ValueError(f"`epochs` must be >= 1, got {epochs}.")
     if lr <= 0:

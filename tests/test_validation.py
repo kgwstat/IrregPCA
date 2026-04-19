@@ -23,9 +23,25 @@ class TestValidateHyperparams:
         )
 
     def test_n_components_zero(self):
+        # k=0 is valid (mean-only model)
+        validate_hyperparams(
+            n_components=0,
+            epochs=100,
+            lr=1e-3,
+            patience=50,
+            valid_split=0.2,
+            batch_size=None,
+            num_workers=0,
+            quadrature_points=256,
+            validation_frequency=1,
+            training_mode="full_batch",
+            integration_mode="grid",
+        )
+
+    def test_n_components_negative(self):
         with pytest.raises(ValueError, match="n_components"):
             validate_hyperparams(
-                n_components=0,
+                n_components=-1,
                 epochs=100,
                 lr=1e-3,
                 patience=50,
@@ -159,4 +175,8 @@ class TestIrregPCAConfig:
 
     def test_config_invalid_n_components(self):
         with pytest.raises(ValueError, match="n_components"):
-            IrregPCAConfig(n_components=0)
+            IrregPCAConfig(n_components=-1)
+
+    def test_config_n_components_zero(self):
+        cfg = IrregPCAConfig(n_components=0, epochs=10)
+        assert cfg.n_components == 0

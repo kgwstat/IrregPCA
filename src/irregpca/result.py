@@ -128,6 +128,8 @@ class IrregPCAResult:
             model.eval()
             with torch.no_grad():
                 parts.append(model(locs).squeeze(-1))
+        if not parts:
+            return torch.zeros(locs.shape[0], 0, device=locs.device)
         return torch.stack(parts, dim=-1)
 
     def all_functions(self, locations: torch.Tensor) -> torch.Tensor:
@@ -172,6 +174,8 @@ class IrregPCAResult:
             with torch.no_grad():
                 vals = model(grid).squeeze(-1)
             norms.append((vals.pow(2).mean()).sqrt())
+        if not norms:
+            return torch.zeros(0, device=dev)
         return torch.stack(norms)
 
     def principal_values(self, num_points: int = 4096) -> torch.Tensor:
